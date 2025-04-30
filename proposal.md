@@ -5,7 +5,7 @@ Samuel Wardell and Arbe Chumala plan to create a series of mini-games playable o
 
 ## Needs To Have List
 - Realistics physics (collisions, elasticity, friction, gravity, etc.)
-- At least 1 functioning p5.party game
+- At least 1 functioning p5.party game (uses room names to connect players)
 - Playable graphics (minimal quality)
 - Clear rule sets for every game
 - Each game should be playable against another human player on the same device
