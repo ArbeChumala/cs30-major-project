@@ -18,7 +18,7 @@ function preload(){
 function setup() {
   createCanvas(windowWidth, windowHeight);
   noStroke();
-  fill(100, 100, 150);
+  fill(100, 100, 255);
 }
 
 function draw() {
