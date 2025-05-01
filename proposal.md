@@ -10,11 +10,12 @@ Samuel Wardell and Arbe Chumala plan to create a series of mini-games playable o
 - Clear rule sets for every game
 - Each game should be playable against another human player on the same device
 - Gameplay should be true to the original game.
+- Sound effects
 
 ## Nice To Have List
 - 3+ games (likely all using similar physics)
 - Customizable avatars
 - Ability to "sign in" (match username with avatar settings and number of wins)
-- Captivating graphics, sound effects, and visual effects
+- Captivating graphics and visual effects
 - Mobile compatible???
 - Bots for games (if applicable)
