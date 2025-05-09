@@ -11,33 +11,22 @@ let Engine = Matter.Engine,
   Runner = Matter.Runner,
   Bodies = Matter.Bodies,
   Composite = Matter.Composite;
-  
+
 // create an engine
 let engine = Engine.create();
 let world = engine.world;
 
-
 // create two boxes and a ground
-let boxA = Bodies.rectangle(400, 200, 80, 80);
-let boxB = Bodies.rectangle(450, 50, 80, 80);
+let boxes = [];
+let themBoxes = [];
 let ground = Bodies.rectangle(400, 610, 810, 60, { isStatic: true });
 
 // add all of the bodies to the world
-Composite.add(engine.world, ground);
+Composite.add(world, ground);
 
+//engine runner
 let runner = Runner.create();
-
-// run the engine
 Runner.run(runner, engine);
-
-function setup(){
-  createCanvas(windowWidth, windowHeight);
-}
-
-function draw(){
-  background(220);
-  
-}
 
 class Box{
   constructor(x, y){
@@ -59,7 +48,32 @@ class Box{
     translate(pos.x, pos.y);
     rotate(angle);
     rectMode(CENTER);
+    fill("red");
+    rect(0, 0, this.w, this.h);
 
     pop();
   }
 }
+
+function setup(){
+  createCanvas(windowWidth, windowHeight);
+  let boxanne = new Box(width/2, height/2);
+  boxes.push(boxanne);
+}
+
+function draw(){
+  background(220);
+  for(let boxanne of boxes){
+    boxanne.show();
+  }
+  for(let boxanne of themBoxes){
+    rect(boxanne.x, boxanne.y, boxanne.w, boxanne.h);
+  }
+}
+
+function mousePressed(){
+  let boxanne = new Box(mouseX, mouseY);
+  boxes.push(boxanne);
+  themBoxes.push({x: mouseX, y: mouseY, w: 20, h: 20});
+}
+
