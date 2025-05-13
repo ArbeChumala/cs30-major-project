@@ -12,21 +12,32 @@ let Engine = Matter.Engine,
   Bodies = Matter.Bodies,
   Composite = Matter.Composite;
 
+
 // create an engine
 let engine = Engine.create();
 let world = engine.world;
 
-// create two boxes and a ground
-let boxes = [];
-let themBoxes = [];
-let ground = Bodies.rectangle(400, 610, 810, 60, { isStatic: true });
+class Boundary{
+  constructor(x, y, w, h){
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.options = {
+      isStatic: true,
+    };
 
-// add all of the bodies to the world
-Composite.add(world, ground);
+    this.body = Bodies.quad(this.x1, this.y1, this.x2, this.y1, this.x2, this.y2, this.x1, this.y2, this.options);
+    Composite.add(world, this.body);
+  }
 
-//engine runner
-let runner = Runner.create();
-Runner.run(runner, engine);
+  show(){
+    push();
+    fill("blue");
+    quad(this.x1, this.y1, this.x2, this.y1, this.x2, this.y2, this.x1, this.y2);
+    pop();
+  }
+}
 
 class Box{
   constructor(x, y){
@@ -55,8 +66,20 @@ class Box{
   }
 }
 
+// create two boxes and a ground
+let boxes = [];
+let themBoxes = [];
+let ground; new Boundary(0, 500, width, height);
+
+//engine runner
+let runner = Runner.create();
+Runner.run(runner, engine);
+
+
+
 function setup(){
   createCanvas(windowWidth, windowHeight);
+  ground = new Boundary(0, 500, width, height);
   let boxanne = new Box(width/2, height/2);
   boxes.push(boxanne);
 }
