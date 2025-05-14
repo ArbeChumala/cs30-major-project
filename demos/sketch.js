@@ -27,7 +27,7 @@ class Boundary{
       isStatic: true,
     };
 
-    this.body = Bodies.quad(this.x1, this.y1, this.x2, this.y1, this.x2, this.y2, this.x1, this.y2, this.options);
+    this.body = Bodies.rectangle(this.x, this.y, this.w, this.h, this.options);
     Composite.add(world, this.body);
   }
 
@@ -69,7 +69,8 @@ class Box{
 // create two boxes and a ground
 let boxes = [];
 let themBoxes = [];
-let ground; new Boundary(0, 500, width, height);
+let ground; 
+// = new Boundary(0, 500, width, height);
 
 //engine runner
 let runner = Runner.create();
