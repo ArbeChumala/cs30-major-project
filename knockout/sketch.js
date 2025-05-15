@@ -57,7 +57,7 @@ class Box{
 
     translate(pos.x, pos.y);
     rotate(angle);
-    rectMode(CORNER);
+    rectMode(CENTER);
     fill("red");
     rect(0, 0, this.w, this.h);
 
@@ -77,7 +77,7 @@ Runner.run(runner, engine);
 
 function setup(){
   createCanvas(windowWidth, windowHeight);
-  ground = new Boundary(width/2, height-500, width, 500);
+  ground = new Boundary(width/2, height-200, width, 200);
   let boxanne = new Box(width/2, height/2);
   boxes.push(boxanne);
 }
