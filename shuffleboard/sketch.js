@@ -24,19 +24,21 @@ class Shuffleboard {
     this.diameter = 50;
     this.team = team;
     this.options = {
-      density: 0.000001,
-      
+      density: 0,
     };
 
     this.body = Bodies.circle(this.x, this.y, this.diameter, this.options);
     Composite.add(world, this.body);
   }
 
+  show() {
 
+  }
 }
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
+
 }
 
 function draw() {
