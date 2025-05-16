@@ -18,8 +18,8 @@ let world = engine.world;
 engine.gravity.y=0;
 
 // create two boxes and a ground
-let boxes = [];
-let ground;
+let penguins = [];
+let squareWidth = 600;
 
 //engine runner
 let runner = Runner.create();
@@ -27,54 +27,33 @@ Runner.run(runner, engine);
 
 function setup(){
   createCanvas(windowWidth, windowHeight);
-  ground = new Boundary(width/2, height-200, width, 200);
+  for(let i = 0; i<10; i++){
+    let x = (width - squareWidth)/2;
+    let y = (height - squareWidth)/2;
+    let colour = i%2 === 0 ? color((100, 120, 200)) : color((10, 10, 10)) ;
+    let somePenguin = new Penguin(x, y, colour);
+    penguins.push(somePenguin);
+  }
 }
 
 function draw(){
   background(150, 200, 255);
   rectMode(CENTER);
   noStroke();
-  rect(width/2, height/2, 600, 600);
-  for(let boxanne of boxes){
-    boxanne.show();
-  }
+  square(width/2, height/2, squareWidth);
 }
 
-function mousePressed(){
-  let boxanne = new Box(mouseX, mouseY);
-  boxes.push(boxanne);
-}
-
-class Boundary{
-  constructor(x, y, w, h){
+//-----------------------------------------------------------------------------------------------
+//classes
+//-----------------------------------------------------------------------------------------------
+class Penguin{
+  constructor(x, y, colour){
     this.x = x;
     this.y = y;
-    this.w = w;
-    this.h = h;
-    this.options = {
-      isStatic: true,
-    };
+    this.r = 20;
+    this.colour = colour;
 
-    this.body = Bodies.rectangle(this.x, this.y, this.w, this.h, this.options);
-    Composite.add(world, this.body);
-  }
-
-  show(){
-    push();
-    fill("blue");
-    rect(0, 0, this.w, this.h);
-    pop();
-  }
-}
-
-class Box{
-  constructor(x, y){
-    this.x = x;
-    this.y = y;
-    this.w = 20;
-    this.h = 20;
-
-    this.body = Bodies.rectangle(this.x, this.y, this.w, this.h);
+    this.body = Bodies.circle(this.x, this.y, this.r);
     Composite.add(world, this.body);
   }
 
@@ -86,9 +65,9 @@ class Box{
 
     translate(pos.x, pos.y);
     rotate(angle);
-    rectMode(CENTER);
-    fill("red");
-    rect(0, 0, this.w, this.h);
+
+    fill(colour);
+    circle(0, 0, this.r);
 
     pop();
   }
