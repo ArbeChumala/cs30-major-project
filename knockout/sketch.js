@@ -15,6 +15,35 @@ let Engine = Matter.Engine,
 // create an engine
 let engine = Engine.create();
 let world = engine.world;
+engine.gravity.y=0;
+
+// create two boxes and a ground
+let boxes = [];
+let ground;
+
+//engine runner
+let runner = Runner.create();
+Runner.run(runner, engine);
+
+function setup(){
+  createCanvas(windowWidth, windowHeight);
+  ground = new Boundary(width/2, height-200, width, 200);
+}
+
+function draw(){
+  background(150, 200, 255);
+  rectMode(CENTER);
+  noStroke();
+  rect(width/2, height/2, 600, 600);
+  for(let boxanne of boxes){
+    boxanne.show();
+  }
+}
+
+function mousePressed(){
+  let boxanne = new Box(mouseX, mouseY);
+  boxes.push(boxanne);
+}
 
 class Boundary{
   constructor(x, y, w, h){
@@ -33,7 +62,7 @@ class Boundary{
   show(){
     push();
     fill("blue");
-    rect(this.x, this.y, this.w, this.h);
+    rect(0, 0, this.w, this.h);
     pop();
   }
 }
@@ -64,33 +93,3 @@ class Box{
     pop();
   }
 }
-
-// create two boxes and a ground
-let boxes = [];
-let ground;
-
-//engine runner
-let runner = Runner.create();
-Runner.run(runner, engine);
-
-
-
-function setup(){
-  createCanvas(windowWidth, windowHeight);
-  ground = new Boundary(width/2, height-200, width, 200);
-  let boxanne = new Box(width/2, height/2);
-  boxes.push(boxanne);
-}
-
-function draw(){
-  background(220);
-  for(let boxanne of boxes){
-    boxanne.show();
-  }
-}
-
-function mousePressed(){
-  let boxanne = new Box(mouseX, mouseY);
-  boxes.push(boxanne);
-}
-
