@@ -6,11 +6,7 @@
 // - describe what you did to take this project "above and beyond"
 
 // module aliases
-let Engine = Matter.Engine,
-  Render = Matter.Render,
-  Runner = Matter.Runner,
-  Bodies = Matter.Bodies,
-  Composite = Matter.Composite;
+const {Engine, Render, Runner, Vector, Body, Bodies, Composite} = Matter;
 
 // create an engine
 let engine = Engine.create();
