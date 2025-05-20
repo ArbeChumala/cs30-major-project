@@ -15,6 +15,7 @@ engine.gravity.y=0;
 
 // penguin arrays
 let penguins = [];
+let arrows = [];
 let squareWidth = 600;
 
 //constants
@@ -46,6 +47,18 @@ function draw(){
   }
 }
 
+function mouseDragged(){
+  for(let arrow of arrows){
+    arrow.activity = arrow.isActive();
+  }
+}
+
+function mouseReleased(){
+  for(let arrow of arrows){
+    arrow.activity = false;
+  }
+}
+
 //-----------------------------------------------------------------------------------------------
 //classes
 //-----------------------------------------------------------------------------------------------
@@ -55,6 +68,9 @@ class Penguin{
     this.y = y;
     this.r = PENGUIN_RADIUS;
     this.colour = colour;
+    
+    this.arrow = new Arrow(this.x, this.y);
+    arrows.push(this.arrow);
 
     this.body = Bodies.circle(this.x, this.y, this.r);
     Composite.add(world, this.body);
@@ -73,5 +89,38 @@ class Penguin{
     circle(0, 0, this.r);
 
     pop();
+
+    this.arrow.show();
+  }
+}
+
+class Arrow{
+  constructor(penguinX, penguinY){
+    this.x = penguinX + random(-50, 50);
+    this.y = penguinY + random(-50, 50);
+    this.penguinX = penguinX;
+    this.penguinY = penguinY;
+    this.activity = false;
+  }
+
+  show(){
+    this.update();
+
+    stroke(0);
+    strokeCap(PROJECT);
+    strokeWeight(3);
+    line(this.x, this.y, this.penguinX, this.penguinY);
+    noStroke();
+  }
+
+  update(){
+    if (this.activity){
+      this.x = mouseX;
+      this.y = mouseY;
+    }
+  }
+
+  isActive(){
+    return mouseX === this.x && mouseY === this.y;
   }
 }
