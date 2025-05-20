@@ -73,8 +73,9 @@ function penguinsStationary(){
   return penguinsStationary;
 }
 
+
 function keyPressed(){
-  if(key === "P"){
+  if(key === "p"){
     for(let penguin of penguins){
       penguin.resetVelocity();
     }
@@ -117,9 +118,10 @@ class Penguin{
   }
 
   resetVelocity(){
-    let dx = this.x - this.penguinX;
-    let dy = this.y - this.penguinY;
+    let dx = (this.arrow.x - this.arrow.penguinX)*0.1;
+    let dy = (this.arrow.y - this.arrow.penguinY)*0.1;
     let velocity = Vector.create(dx, dy);
+
     Body.setVelocity(this.body, velocity);
   }
 }
