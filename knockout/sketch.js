@@ -19,7 +19,7 @@ let arrows = [];
 let squareWidth = 600;
 
 //constants
-const PENGUIN_RADIUS = 40;
+const PENGUIN_RADIUS = 20;
 
 //engine runner
 let runner = Runner.create();
@@ -60,17 +60,13 @@ function mouseReleased(){
 }
 
 function penguinsStationary(){
-  let penguinsStationary = true;
-  let stationary = Vector.create(0, 0);
+  let movingPenguinFound = false;
   for(let penguin of penguins){
-    if(Body.getVelocity(penguin.body) === stationary){
-      console.log("this penguin is not moving");
-    }
-    else{
-      penguinStationary = false;
+    if(Math.round(penguin.body.velocity.x) !== 0 || !Math.round(penguin.body.velocity.y) ===0){
+      movingPenguinFound = true;
     }
   }
-  return penguinsStationary;
+  return !movingPenguinFound;
 }
 
 
@@ -95,23 +91,35 @@ class Penguin{
     this.arrow = new Arrow(this.x, this.y);
     arrows.push(this.arrow);
 
-    this.body = Bodies.circle(this.x, this.y, this.r);
+    let options = {
+      restitution: 0.7
+    };
+
+    this.body = Bodies.circle(this.x, this.y, this.r, options);
     Composite.add(world, this.body);
   }
 
   show(){
-    this.arrow.show();
-
-    push();
-
     let pos = this.body.position;
     let angle = this.body.angle;
 
+    this.x = pos.x;
+    this.y = pos.y;
+    
+    this.arrow.show(this.x, this.y);
+
+
+    push();
+    
     translate(pos.x, pos.y);
+
+
     rotate(angle);
 
     fill(this.colour);
-    circle(0, 0, this.r);
+    noStroke();
+
+    circle(0, 0, this.r * 2);
 
     pop();
 
@@ -128,24 +136,38 @@ class Penguin{
 
 class Arrow{
   constructor(penguinX, penguinY){
-    this.x = penguinX + random(-50, 50);
-    this.y = penguinY + random(-50, 50);
+    if(random(100) > 50){
+      this.x = penguinX + random(20, 50);
+    }
+    else{
+      this.x = penguinX - random(20, 50);
+    }
+    if(random(100) > 50){
+      this.y = penguinY + random(20, 50);
+    }
+    else{
+      this.y = penguinY - random(20, 50);
+    }
     this.penguinX = penguinX;
     this.penguinY = penguinY;
     this.activity = false;
+    this.colour = "black";
   }
 
-  show(){
-    this.update();
+  show(x, y){
+    this.update(x, y);
 
-    stroke(0);
+    stroke(this.colour);
     strokeCap(ROUND);
     strokeWeight(5);
+
     line(this.x, this.y, this.penguinX, this.penguinY);
-    noStroke();
   }
 
-  update(){
+  update(x, y){
+    this.penguinX = x;
+    this.penguinY = y;
+
     if (this.activity){
       if(Math.abs(this.x - this.penguinX) < 100){
         this.x = mouseX;
