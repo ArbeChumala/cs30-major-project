@@ -47,7 +47,7 @@ function draw(){
   }
 }
 
-function mouseDragged(){
+function mousePressed(){
   for(let arrow of arrows){
     arrow.activity = arrow.isActive();
   }
@@ -56,6 +56,28 @@ function mouseDragged(){
 function mouseReleased(){
   for(let arrow of arrows){
     arrow.activity = false;
+  }
+}
+
+function penguinsStationary(){
+  let penguinsStationary = true;
+  let stationary = Vector.create(0, 0);
+  for(let penguin of penguins){
+    if(Body.getVelocity(penguin.body) === stationary){
+      console.log("this penguin is not moving");
+    }
+    else{
+      penguinStationary = false;
+    }
+  }
+  return penguinsStationary;
+}
+
+function keyPressed(){
+  if(key === "P"){
+    for(let penguin of penguins){
+      penguin.resetVelocity();
+    }
   }
 }
 
@@ -77,6 +99,8 @@ class Penguin{
   }
 
   show(){
+    this.arrow.show();
+
     push();
 
     let pos = this.body.position;
@@ -90,7 +114,13 @@ class Penguin{
 
     pop();
 
-    this.arrow.show();
+  }
+
+  resetVelocity(){
+    let dx = this.x - this.penguinX;
+    let dy = this.y - this.penguinY;
+    let velocity = Vector.create(dx, dy);
+    Body.setVelocity(this.body, velocity);
   }
 }
 
@@ -107,20 +137,24 @@ class Arrow{
     this.update();
 
     stroke(0);
-    strokeCap(PROJECT);
-    strokeWeight(3);
+    strokeCap(ROUND);
+    strokeWeight(5);
     line(this.x, this.y, this.penguinX, this.penguinY);
     noStroke();
   }
 
   update(){
     if (this.activity){
-      this.x = mouseX;
-      this.y = mouseY;
+      if(Math.abs(this.x - this.penguinX) < 100){
+        this.x = mouseX;
+      }
+      if (Math.abs(this.y - this.penguinY) < 100){
+        this.y = mouseY;
+      }
     }
   }
 
   isActive(){
-    return mouseX === this.x && mouseY === this.y;
+    return mouseX < this.x + 5 && mouseX >this.x - 5 && mouseY < this.y + 5 && mouseY > this.y - 5 ;
   }
 }
