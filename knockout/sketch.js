@@ -144,10 +144,12 @@ class Arrow{
 
     this.activity = false;
     this.colour = "black";
+
+    this.stationaryLastFrame = true;
   }
 
   show(x, y){
-    if(penguinsStationary()){
+    if(penguinsStationary() && this.stationaryLastFrame){
       this.update(x, y);
   
       stroke(this.colour);
@@ -156,9 +158,14 @@ class Arrow{
   
       line(this.x, this.y, this.penguinX, this.penguinY);
     }
-    else{
+    else if (penguinsStationary() && !this.stationaryLastFrame){
+      this.stationaryLastFrame = true;
+      
       this.x = this.chooseX();
       this.y = this.chooseY();
+    }
+    else if(!penguinsStationary()){
+      this.stationaryLastFrame = false;
     }
   }
 
@@ -166,6 +173,10 @@ class Arrow{
     this.penguinX = x;
     this.penguinY = y;
 
+    this.moveWithMouse();
+  }
+
+  moveWithMouse(){
     if (this.activity){
       if(Math.abs(this.x - this.penguinX) < 100){
         this.x = mouseX;
