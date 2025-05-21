@@ -92,7 +92,7 @@ class Penguin{
     arrows.push(this.arrow);
 
     let options = {
-      restitution: 0.7
+      restitution: 0.1
     };
 
     this.body = Bodies.circle(this.x, this.y, this.r, options);
@@ -126,8 +126,8 @@ class Penguin{
   }
 
   resetVelocity(){
-    let dx = (this.arrow.x - this.arrow.penguinX)*0.1;
-    let dy = (this.arrow.y - this.arrow.penguinY)*0.1;
+    let dx = (this.arrow.x - this.arrow.penguinX)*0.05;
+    let dy = (this.arrow.y - this.arrow.penguinY)*0.05;
     let velocity = Vector.create(dx, dy);
 
     Body.setVelocity(this.body, velocity);
@@ -136,32 +136,30 @@ class Penguin{
 
 class Arrow{
   constructor(penguinX, penguinY){
-    if(random(100) > 50){
-      this.x = penguinX + random(20, 50);
-    }
-    else{
-      this.x = penguinX - random(20, 50);
-    }
-    if(random(100) > 50){
-      this.y = penguinY + random(20, 50);
-    }
-    else{
-      this.y = penguinY - random(20, 50);
-    }
     this.penguinX = penguinX;
     this.penguinY = penguinY;
+
+    this.x = this.chooseX();
+    this.y = this.chooseY();
+
     this.activity = false;
     this.colour = "black";
   }
 
   show(x, y){
-    this.update(x, y);
-
-    stroke(this.colour);
-    strokeCap(ROUND);
-    strokeWeight(5);
-
-    line(this.x, this.y, this.penguinX, this.penguinY);
+    if(penguinsStationary()){
+      this.update(x, y);
+  
+      stroke(this.colour);
+      strokeCap(ROUND);
+      strokeWeight(5);
+  
+      line(this.x, this.y, this.penguinX, this.penguinY);
+    }
+    else{
+      this.x = this.chooseX();
+      this.y = this.chooseY();
+    }
   }
 
   update(x, y){
@@ -180,5 +178,25 @@ class Arrow{
 
   isActive(){
     return mouseX < this.x + 5 && mouseX >this.x - 5 && mouseY < this.y + 5 && mouseY > this.y - 5 ;
+  }
+
+  chooseNewCoordinate(reference){
+    let variable;
+
+    if(random(100) > 50){
+      variable = reference + random(20, 50);
+    }
+    else{
+      variable = reference - random(20, 50);
+    }
+    return variable;
+  }
+
+  chooseX(){
+    return this.chooseNewCoordinate(this.penguinX);
+  }
+
+  chooseY(){
+    return this.chooseNewCoordinate(this.penguinY);
   }
 }
