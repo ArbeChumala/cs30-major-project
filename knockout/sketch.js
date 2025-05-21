@@ -42,8 +42,12 @@ function draw(){
   noStroke();
   square(width/2, height/2, squareWidth);
 
-  for(let penguin of penguins){
-    penguin.show();
+  for(i = penguins.length - 1; i>=0; i--){
+    penguins[i].show();
+
+    if(penguins[i].isDead()){
+      penguins.splice(i, 1);
+    }
   }
 }
 
@@ -100,22 +104,14 @@ class Penguin{
   }
 
   show(){
-    let pos = this.body.position;
-    let angle = this.body.angle;
+    this.update();
 
-    this.x = pos.x;
-    this.y = pos.y;
-    
-    this.arrow.update(this.x, this.y);
     this.arrow.show();
-
 
     push();
     
-    translate(pos.x, pos.y);
-
-
-    rotate(angle);
+    translate(this.x, this.y);
+    rotate(this.angle);
 
     fill(this.colour);
     noStroke();
@@ -123,7 +119,17 @@ class Penguin{
     circle(0, 0, this.r * 2);
 
     pop();
+  }
 
+  update(){
+    this.x = this.body.position.x;
+    this.y = this.body.position.y;
+    this.angle = this.body.angle;
+    this.arrow.update(this.x, this.y);
+
+    if (this.isDying()){
+      this.r *= 0.9;
+    }
   }
 
   resetVelocity(){
@@ -132,6 +138,14 @@ class Penguin{
     let velocity = Vector.create(dx, dy);
 
     Body.setVelocity(this.body, velocity);
+  }
+
+  isDying(){
+    return !(Math.abs(this.x - width/2) < squareWidth/2+this.r && Math.abs(this.y - height/2) < squareWidth/2+this.r);
+  }
+
+  isDead(){
+    return this.r < 3;
   }
 }
 
