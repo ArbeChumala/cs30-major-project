@@ -106,7 +106,8 @@ class Penguin{
     this.x = pos.x;
     this.y = pos.y;
     
-    this.arrow.show(this.x, this.y);
+    this.arrow.update(this.x, this.y);
+    this.arrow.show();
 
 
     push();
@@ -148,22 +149,26 @@ class Arrow{
     this.stationaryLastFrame = true;
   }
 
-  show(x, y){
+  show(){
+    //the penguins have been stationary
     if(penguinsStationary() && this.stationaryLastFrame){
-      this.update(x, y);
-  
+      //draw the line
       stroke(this.colour);
       strokeCap(ROUND);
       strokeWeight(5);
   
       line(this.x, this.y, this.penguinX, this.penguinY);
     }
+
+    //the penguins are just stopping
     else if (penguinsStationary() && !this.stationaryLastFrame){
       this.stationaryLastFrame = true;
       
       this.x = this.chooseX();
       this.y = this.chooseY();
     }
+
+    //the penguins are moving
     else if(!penguinsStationary()){
       this.stationaryLastFrame = false;
     }
@@ -178,17 +183,27 @@ class Arrow{
 
   moveWithMouse(){
     if (this.activity){
-      if(Math.abs(this.x - this.penguinX) < 100){
-        this.x = mouseX;
+      //calculate the angle
+      let dx = mouseX - this.penguinX;
+      let dy = mouseY - this.penguinY;
+
+      //calculate the distance
+      let distance = dist(mouseX, mouseY, this.penguinX, this.penguinY);
+
+      if(distance > 100){
+        let ratio =  100/distance;
+        this.x = ratio*dx + this.penguinX;
+        this.y = ratio*dy + this.penguinY;
       }
-      if (Math.abs(this.y - this.penguinY) < 100){
+      else{
+        this.x = mouseX;
         this.y = mouseY;
       }
     }
   }
 
   isActive(){
-    return mouseX < this.x + 5 && mouseX >this.x - 5 && mouseY < this.y + 5 && mouseY > this.y - 5 ;
+    return Math.abs(mouseX - this.x) <= 5 && Math.abs(mouseY - this.y) <= 5 ;
   }
 
   chooseNewCoordinate(reference){
