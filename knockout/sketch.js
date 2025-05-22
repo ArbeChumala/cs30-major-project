@@ -66,7 +66,7 @@ function mouseReleased(){
 function penguinsStationary(){
   let movingPenguinFound = false;
   for(let penguin of penguins){
-    if(Math.round(penguin.body.velocity.x) !== 0 || !Math.round(penguin.body.velocity.y) ===0){
+    if(Math.round(penguin.body.velocity.x*10)/10 !== 0 || !Math.round(penguin.body.velocity.y*10)/10 ===0){
       movingPenguinFound = true;
     }
   }
@@ -129,6 +129,11 @@ class Penguin{
 
     if (this.isDying()){
       this.r *= 0.9;
+    }
+
+    if(penguinsStationary()){
+      let stationary = Vector.create(0,0);
+      Body.setVelocity(this.body, stationary);
     }
   }
 
