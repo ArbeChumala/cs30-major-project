@@ -40,6 +40,62 @@ class Shuffleboard {
   }
 }
 
+
+
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  let isStriped = true;
+  let x = 2 * width / 3;
+  let y = height / 2;
+  let counter = [-1];
+  for (let n = 0; n < 5; n ++) {
+    let lastCounter = counter.length - 1;
+    counter.push(counter[lastCounter] + 1);
+    lastCounter ++;
+    if (counter[lastCounter] === 0) {
+      counter.splice(0, 1);
+      lastCounter --;
+    }
+    console.log(counter);
+    let aBall;
+    for (let number of counter) {
+      console.log(number);
+      let yModifier = number - counter[lastCounter] / 2;
+      console.log(yModifier);
+      console.log(counter);
+      if (lastCounter === 2 && number === 1) {
+        aBall = new Ball(x + lastCounter * 25 * 2**(1/2), y + yModifier * 30 * 2**(1/2), "black", false, true, false);
+      }
+      else {
+        aBall = new Ball(x + lastCounter * 25 * 2**(1/2), y + yModifier * 30 * 2**(1/2), coloursList[coloursList.length - 1], isStriped, false, false);
+        isStriped = !isStriped;
+      }
+      balls.push(aBall);
+      if (isStriped) {
+        coloursList.pop();
+      }
+    }
+  }
+  aBall = new Ball(width / 3, height / 2, "white", false, false, true);
+  balls.push(aBall);
+}
+
+function draw() {
+  background(220);
+  for (let ball of balls) {
+    ball.show();
+  }
+}
+
+function mousePressed() {
+  let aBall = new Ball(mouseX, mouseY, "red", true);
+  balls.push(aBall);
+}
+
+
+// Classes
+// ---------------------------------------------------------------------------------------------------------
+
 class Ball {
   constructor(x, y, colour, striped, eightBall) {
     this.x = x;
@@ -57,7 +113,6 @@ class Ball {
   }
 
   show() {
-
     push();
     let pos = this.body.position;
     let angle = this.body.angle;
@@ -72,52 +127,27 @@ class Ball {
     }
     pop();
   }
-}
 
-function setup() {
-  createCanvas(windowWidth, windowHeight);
-  let isStriped = true;
-  let x = 2 * width / 3;
-  let y = height / 2;
-  let counter = [-1];
-  for (let n = 0; n < 5; n ++) {
-    let lastCounter = counter.length - 1;
-    counter.push(counter[lastCounter] + 1);
-    lastCounter ++;
-    if (counter[lastCounter] === 0) {
-      counter.splice(0, 1);
-    }
-    console.log(counter);
-    let aBall;
-    for (let number of counter) {
-      console.log(number);
-      let yModifier = number - lastCounter / 2;
-      if (lastCounter === 2 && number === 1) {
-        aBall = new Ball(x + lastCounter * 40 * 2**(1/2), y + yModifier * 40 * 2**(1/2), "black", false, true);
-      }
-      else {
-        aBall = new Ball(x + lastCounter * 40 * 2**(1/2), y + yModifier * 40 * 2**(1/2), coloursList[coloursList.length - 1], isStriped, false);
-        isStriped = !isStriped;
-      }
-      balls.push(aBall);
-      if (isStriped) {
-        coloursList.pop();
-      }
-    }
+  update() {
+    
   }
 }
 
-function draw() {
-  background(220);
-  for (let ball of balls) {
-    ball.show();
+class Cue {
+  constructor(ballX, ballY) {
+    this.strikeX = ballX;
+    this.strikeX = ballY;
+
+    this.x = ballX - 100;
+    this.y = ballY;
+  };
+
+  update() {
+    if (mouseIsPressed && mouseX < this.x + 25 && mouseX > this.x - 25 && mouseY > this.y - 25 && mouseY < this.y + 25) {
+      this.x = mouseX;
+      this.y = mouseY;
+    }
   }
+
 }
-
-function mousePressed() {
-  let aBall = new Ball(mouseX, mouseY, "red", true);
-  balls.push(aBall);
-}
-
-
 
