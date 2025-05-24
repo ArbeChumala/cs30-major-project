@@ -1,2 +1,2 @@
 # CS 30 Major Project
-- (Knockout) [knockout]
+- [Knockout] (knockout)
