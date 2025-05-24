@@ -25,6 +25,13 @@ const PENGUIN_RADIUS = 20;
 let runner = Runner.create();
 Runner.run(runner, engine);
 
+function preload(){
+  partyConnect(
+    "wss://demoserver.p5party.org", 
+    "sarbechurdell-knockout", 
+    "main");
+}
+
 function setup(){
   createCanvas(windowWidth, windowHeight);
   for(let i = 0; i<8; i++){
