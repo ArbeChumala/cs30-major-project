@@ -44,8 +44,22 @@ function setup(){
     for(let i = 0; i<8; i++){
       let x = random((width - squareWidth)/2,(width + squareWidth)/2 );
       let y = random((height - squareWidth)/2, (height + squareWidth)/2);
-      let colour = i%2 === 0 ? color(80, 150, 200) : color((10, 10, 10)) ;
-      let somePenguin = new Penguin(x, y, colour, i);
+
+      let red;
+      let green;
+      let blue;
+
+      if(i < 4){
+        red = 80;
+        green = 150;
+        blue = 200;
+      }
+      else{
+        red = 10;
+        green = 10;
+        blue = 10;
+      }
+      let somePenguin = new Penguin(x, y, red, green, blue, i);
       penguins.push(somePenguin);
     }
   }
@@ -71,11 +85,21 @@ function draw(){
         updateIndexToArrayMap();
       }
     }
+
   }
   else{
     for(let penguin of shared.penguinBodies){
-      fill(penguin.colour);
-      circle(penguin.x, penguin.y, penguin.r * 2);
+      push();
+    
+      translate(penguin.x, penguin.y);
+      rotate(penguin.angle);
+
+      fill(penguin.red, penguin.green, penguin.blue);
+      noStroke();
+
+      circle(0, 0, penguin.r * 2);
+
+      pop();
     }
   }
 }
@@ -128,12 +152,15 @@ function updateIndexToArrayMap(){
 //classes
 //-----------------------------------------------------------------------------------------------
 class Penguin{
-  constructor(x, y, colour, id){
+  constructor(x, y, red, green, blue, id){
     this.x = x;
     this.y = y;
     this.r = PENGUIN_RADIUS;
-    this.colour = colour;
     this.id = id;
+
+    this.red = red;
+    this.green = green;
+    this.blue = blue;
     
     this.arrow = new Arrow(this.x, this.y, this.id);
     arrows.push(this.arrow);
@@ -149,7 +176,9 @@ class Penguin{
       y: this.y,
       r: this.r,
       angle: this.body.angle,
-      colour: this.colour,
+      red: this.red,
+      green: this.green,
+      blue: this.blue,
       id: this.id,
     };
 
@@ -166,7 +195,7 @@ class Penguin{
     translate(this.x, this.y);
     rotate(this.angle);
 
-    fill(this.colour);
+    fill(this.red, this.green, this.blue);
     noStroke();
 
     circle(0, 0, this.r * 2);
@@ -197,8 +226,10 @@ class Penguin{
       x: this.x,
       y: this.y,
       r: this.r,
-      angle: this.body.angle,
-      colour: this.colour,
+      angle: this.angle,
+      red: this.red,
+      green: this.green,
+      blue: this.blue,
       id: this.id,
     };
 
@@ -291,7 +322,7 @@ class Arrow{
       penguinY: this.penguinY,
       x: this.x,
       y: this.y,
-      colour: this.colour,
+      party: this.colour,
       id: this.id,
     };
 
