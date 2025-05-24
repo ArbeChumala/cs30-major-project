@@ -13,10 +13,17 @@ let engine = Engine.create();
 let world = engine.world;
 engine.gravity.y=0;
 
+let shared = {
+  penguinBodies: [],
+  penguinArrows: [],
+};
+
 // penguin arrays
 let penguins = [];
 let arrows = [];
 let squareWidth = 600;
+
+let indexToArrayMap = new Map();
 
 //constants
 const PENGUIN_RADIUS = 20;
@@ -25,14 +32,36 @@ const PENGUIN_RADIUS = 20;
 let runner = Runner.create();
 Runner.run(runner, engine);
 
+function preload(){
+  partyConnect("wss://demoserver.p5party.org", "sarbechurdell-knockout", "main");
+  shared = partyLoadShared("shared", shared);
+}
+
 function setup(){
   createCanvas(windowWidth, windowHeight);
-  for(let i = 0; i<8; i++){
-    let x = random((width - squareWidth)/2,(width + squareWidth)/2 );
-    let y = random((height - squareWidth)/2, (height + squareWidth)/2);
-    let colour = i%2 === 0 ? color(80, 150, 200) : color((10, 10, 10)) ;
-    let somePenguin = new Penguin(x, y, colour);
-    penguins.push(somePenguin);
+
+  if(partyIsHost()){
+    for(let i = 0; i<8; i++){
+      let x = random((width - squareWidth)/2,(width + squareWidth)/2 );
+      let y = random((height - squareWidth)/2, (height + squareWidth)/2);
+
+      let red;
+      let green;
+      let blue;
+
+      if(i < 4){
+        red = 80;
+        green = 150;
+        blue = 200;
+      }
+      else{
+        red = 10;
+        green = 10;
+        blue = 10;
+      }
+      let somePenguin = new Penguin(x, y, red, green, blue, i);
+      penguins.push(somePenguin);
+    }
   }
 }
 
@@ -42,24 +71,52 @@ function draw(){
   noStroke();
   square(width/2, height/2, squareWidth);
 
-  for(i = penguins.length - 1; i>=0; i--){
-    penguins[i].show();
+  if(partyIsHost()){
+    shared.penguinBodies = [];
+    shared.penguinArrows = [];
 
-    if(penguins[i].isDead()){
-      penguins.splice(i, 1);
+    for(i = penguins.length - 1; i>=0; i--){
+      penguins[i].updateShared();
+      penguins[i].update();
+      penguins[i].show();
+  
+      if(penguins[i].isDead()){
+        penguins.splice(i, 1);
+        updateIndexToArrayMap();
+      }
+    }
+
+  }
+  else{
+    for(let penguin of shared.penguinBodies){
+      push();
+    
+      translate(penguin.x, penguin.y);
+      rotate(penguin.angle);
+
+      fill(penguin.red, penguin.green, penguin.blue);
+      noStroke();
+
+      circle(0, 0, penguin.r * 2);
+
+      pop();
     }
   }
 }
 
 function mousePressed(){
-  for(let arrow of arrows){
-    arrow.activity = arrow.isActive();
+  if(partyIsHost()){
+    for(let arrow of arrows){
+      arrow.activity = arrow.isActive();
+    }
   }
 }
 
 function mouseReleased(){
-  for(let arrow of arrows){
-    arrow.activity = false;
+  if(partyIsHost()){
+    for(let arrow of arrows){
+      arrow.activity = false;
+    }
   }
 }
 
@@ -73,12 +130,21 @@ function penguinsStationary(){
   return !movingPenguinFound;
 }
 
-
 function keyPressed(){
-  if(key === "p"){
-    for(let penguin of penguins){
-      penguin.resetVelocity();
+  if(partyIsHost()){
+    if(key === "p"){
+      for(let penguin of penguins){
+        penguin.resetVelocity();
+      }
     }
+  }
+}
+
+function updateIndexToArrayMap(){
+  indexToArrayMap.clear();
+  for(let i = 0; i<penguins.length; i++){
+    let penguinID = penguins[i].dummy.id;
+    indexToArrayMap.set(penguinID, i);
   }
 }
 
@@ -86,13 +152,17 @@ function keyPressed(){
 //classes
 //-----------------------------------------------------------------------------------------------
 class Penguin{
-  constructor(x, y, colour){
+  constructor(x, y, red, green, blue, id){
     this.x = x;
     this.y = y;
     this.r = PENGUIN_RADIUS;
-    this.colour = colour;
+    this.id = id;
+
+    this.red = red;
+    this.green = green;
+    this.blue = blue;
     
-    this.arrow = new Arrow(this.x, this.y);
+    this.arrow = new Arrow(this.x, this.y, this.id);
     arrows.push(this.arrow);
 
     let options = {
@@ -100,12 +170,24 @@ class Penguin{
     };
 
     this.body = Bodies.circle(this.x, this.y, this.r, options);
+
+    this.dummy = {
+      x: this.x,
+      y: this.y,
+      r: this.r,
+      angle: this.body.angle,
+      red: this.red,
+      green: this.green,
+      blue: this.blue,
+      id: this.id,
+    };
+
+    shared.penguinBodies.push(this.dummy);
+    
     Composite.add(world, this.body);
   }
 
   show(){
-    this.update();
-
     this.arrow.show();
 
     push();
@@ -113,7 +195,7 @@ class Penguin{
     translate(this.x, this.y);
     rotate(this.angle);
 
-    fill(this.colour);
+    fill(this.red, this.green, this.blue);
     noStroke();
 
     circle(0, 0, this.r * 2);
@@ -137,6 +219,25 @@ class Penguin{
     }
   }
 
+  updateShared(){
+    let index = indexToArrayMap.get(this.id);
+
+    this.dummy = {
+      x: this.x,
+      y: this.y,
+      r: this.r,
+      angle: this.angle,
+      red: this.red,
+      green: this.green,
+      blue: this.blue,
+      id: this.id,
+    };
+
+    shared.penguinBodies[index] = this.dummy;
+
+    this.arrow.updateShared();
+  }
+
   resetVelocity(){
     let dx = (this.arrow.x - this.arrow.penguinX)*0.05;
     let dy = (this.arrow.y - this.arrow.penguinY)*0.05;
@@ -155,9 +256,11 @@ class Penguin{
 }
 
 class Arrow{
-  constructor(penguinX, penguinY){
+  constructor(penguinX, penguinY, id){
     this.penguinX = penguinX;
     this.penguinY = penguinY;
+
+    this.id = id;
 
     this.x = this.chooseX();
     this.y = this.chooseY();
@@ -166,6 +269,17 @@ class Arrow{
     this.colour = "black";
 
     this.stationaryLastFrame = true;
+
+    this.dummy = {
+      penguinX: this.penguinX,
+      penguinY: this.penguinY,
+      x: this.x,
+      y: this.y,
+      colour: this.colour,
+      id: this.id,
+    };
+
+    shared.penguinArrows.push(this.dummy);
   }
 
   show(){
@@ -198,6 +312,21 @@ class Arrow{
     this.penguinY = y;
 
     this.moveWithMouse();
+  }
+
+  updateShared(){
+    let index = indexToArrayMap.get(this.id);
+
+    this.dummy = {
+      penguinX: this.penguinX,
+      penguinY: this.penguinY,
+      x: this.x,
+      y: this.y,
+      party: this.colour,
+      id: this.id,
+    };
+
+    shared.penguinArrows[index] = this.dummy;
   }
 
   moveWithMouse(){
