@@ -34,7 +34,7 @@ Runner.run(runner, engine);
 
 function preload(){
   partyConnect("wss://demoserver.p5party.org", "sarbechurdell-knockout", "main");
-  partyLoadShared("shared", shared);
+  shared = partyLoadShared("shared", shared);
 }
 
 function setup(){
