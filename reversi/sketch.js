@@ -23,16 +23,18 @@ const ANIMATION_DELAY = 2;
 
 //game states and variables
 let gameOver = false;
-let currentPlayer = WHITE;
 let whiteTileCount = 2;
 let blackTileCount = 2;
-let mode = "pvb";
+let mode = "pvp";
 let timerStarted = false;
 
 //grids
-let grid = generateStartGrid();
-let drawingGrid = structuredClone(grid);
-let movesArray;
+let shared = {
+  currentPlayer: WHITE,
+  grid: generateStartGrid(),
+  drawingGrid: generateStartGrid(),
+  movesArray: generateEmptyGrid(),
+};
 
 //images, fonts, and animation frames
 let whiteTile;
@@ -64,6 +66,11 @@ function preload(){
   jazzMusic = loadSound("assets/jazz-music.mp3");
   for (let i = 0; i<=12; i++){
     animationFrameArray.push(loadImage(`assets/animation-frames/${i}.png`));
+  }
+
+  if(mode === "pvp"){
+    partyConnect("wss://demoserver.p5party.org", "sarbe-reversi", "main");
+    shared = partyLoadShared("shared", shared);
   }
 }
 
@@ -155,7 +162,7 @@ function findMoves(thePlayer) {
     for (let x = 0; x<GRID_DIMENSIONS; x++){
 
       //the starting position can only be the player itself
-      if (grid[y][x] === thePlayer){
+      if (shared.grid[y][x] === thePlayer){
 
         //there are 8 directions in which you can protrude out of the tile
         //ix and iy represent the change in x and the change in y for each direction (when same index value)
@@ -169,8 +176,8 @@ function findMoves(thePlayer) {
           //a connection line must cross over only the opposite colour tiles, so this while loop runs based on that conditional
           while (y+iy[i]*counter >=0 && y+iy[i]*counter < GRID_DIMENSIONS &&
                  x+ix[i]*counter >=0 && x+ix[i]*counter < GRID_DIMENSIONS &&
-                 grid[y+iy[i]*counter][x+ix[i]*counter] !== thePlayer && 
-                 grid[y+iy[i]*counter][x+ix[i]*counter] !== EMPTY){
+                 shared.grid[y+iy[i]*counter][x+ix[i]*counter] !== thePlayer && 
+                 shared.grid[y+iy[i]*counter][x+ix[i]*counter] !== EMPTY){
             //for every change in the counter, the change in x and the change in y will be multiplied, thus checking a new tile
             counter++;
           }
@@ -178,7 +185,7 @@ function findMoves(thePlayer) {
           //the connection line can only be finished if the final space is empty
           if(y+iy[i]*counter >=0 && y+iy[i]*counter < GRID_DIMENSIONS &&
              x+ix[i]*counter >=0 && x+ix[i]*counter < GRID_DIMENSIONS &&
-             grid[y+iy[i]*counter][x+ix[i]*counter] === EMPTY && 
+             shared.grid[y+iy[i]*counter][x+ix[i]*counter] === EMPTY && 
              counter>1){
             
             //the movesArray will end up showing the amount of tiles that are taken over by the connection line
@@ -209,7 +216,7 @@ function changeGrid(x, y){
   let iy = [0, 1, 1, 1, 0, -1, -1, -1];
 
   //updates the drawingGrid for each move
-  drawingGrid = structuredClone(grid);
+  shared.drawingGrid = shared.grid;
   
   //looking for connection lines in all 8 possible directions
   for (let i = 0; i<8; i++){
@@ -218,8 +225,8 @@ function changeGrid(x, y){
     //tiles in the middle of the connection line must be the opposite colour
     while (y+iy[i]*counter >=0 && y+iy[i]*counter < GRID_DIMENSIONS &&
             x+ix[i]*counter >=0 && x+ix[i]*counter < GRID_DIMENSIONS &&
-            grid[y+iy[i]*counter][x+ix[i]*counter] !== currentPlayer && 
-            grid[y+iy[i]*counter][x+ix[i]*counter] !== EMPTY){
+            shared.grid[y+iy[i]*counter][x+ix[i]*counter] !== shared.currentPlayer && 
+            shared.grid[y+iy[i]*counter][x+ix[i]*counter] !== EMPTY){
 
       //counter will increase for each tile that is part of the line
       counter++;
@@ -228,7 +235,7 @@ function changeGrid(x, y){
     //if the tile found at the end of the line is the current player, then they will go backwards and fill in the tiles that make the line
     if(y+iy[i]*counter >=0 && y+iy[i]*counter < GRID_DIMENSIONS &&
         x+ix[i]*counter >=0 && x+ix[i]*counter < GRID_DIMENSIONS &&
-        grid[y+iy[i]*counter][x+ix[i]*counter] === currentPlayer && 
+        shared.grid[y+iy[i]*counter][x+ix[i]*counter] === shared.currentPlayer && 
         counter>1){
       
       //when the counter goes down, it will cover all of the tiles until it hits the new tile 
@@ -236,20 +243,20 @@ function changeGrid(x, y){
 
         //the tiles that will be animated are turned into objects and the animation direction is determined by the original colour of the tile
         let flippingTile = {
-          number: currentPlayer,
-          animationFrame: grid[y+iy[i]*counter][x+ix[i]*counter] === WHITE ? 12:0,
+          number: shared.currentPlayer,
+          animationFrame: shared.grid[y+iy[i]*counter][x+ix[i]*counter] === WHITE ? 12:0,
         };
 
         //if the tile is the opposite player, then the tile must be flipped (animated) on the drawing Grid
-        if (grid[y+iy[i]*counter][x+ix[i]*counter] !== currentPlayer && grid[y+iy[i]*counter][x+ix[i]*counter] !== EMPTY){
-          grid[y+iy[i]*counter][x+ix[i]*counter] = currentPlayer;
-          drawingGrid[y+iy[i]*counter][x+ix[i]*counter] = flippingTile;
+        if (shared.grid[y+iy[i]*counter][x+ix[i]*counter] !== shared.currentPlayer && shared.grid[y+iy[i]*counter][x+ix[i]*counter] !== EMPTY){
+          shared.grid[y+iy[i]*counter][x+ix[i]*counter] = shared.currentPlayer;
+          shared.drawingGrid[y+iy[i]*counter][x+ix[i]*counter] = flippingTile;
         }
 
         //if the cell is empty, then the tile will just be placed
         else{
-          grid[y+iy[i]*counter][x+ix[i]*counter] = currentPlayer;
-          drawingGrid[y+iy[i]*counter][x+ix[i]*counter] = currentPlayer;
+          shared.grid[y+iy[i]*counter][x+ix[i]*counter] = shared.currentPlayer;
+          shared.drawingGrid[y+iy[i]*counter][x+ix[i]*counter] = shared.currentPlayer;
         }
       }
     }      
@@ -258,11 +265,11 @@ function changeGrid(x, y){
 
 function toggleCurrentPlayer(){
   //uses a ternary operator to concisely toggle the player
-  currentPlayer = currentPlayer === BLACK ? WHITE: BLACK;
-  let otherPlayer = currentPlayer === BLACK ? WHITE: BLACK;
+  shared.currentPlayer = shared.currentPlayer === BLACK ? WHITE: BLACK;
+  let otherPlayer = shared.currentPlayer === BLACK ? WHITE: BLACK;
   
   //if the new player has no moves, it will either toggle the player again or cut to the win screen
-  if (!findMoves(currentPlayer)){
+  if (!findMoves(shared.currentPlayer)){
     if(findMoves(otherPlayer)){
       toggleCurrentPlayer();
     }
@@ -280,10 +287,10 @@ function updateTileCount(){
   //iterates through the 2d array to count each kind of tile
   for (let y = 0; y<GRID_DIMENSIONS; y++){
     for(let x = 0; x<GRID_DIMENSIONS; x++){
-      if (grid[y][x] === WHITE){
+      if (shared.grid[y][x] === WHITE){
         whiteTileCount++;
       }
-      else if(grid[y][x] === BLACK){
+      else if(shared.grid[y][x] === BLACK){
         blackTileCount++;
       }
     }
@@ -292,7 +299,7 @@ function updateTileCount(){
 
 function startBotTimer(){
   //waits one second after the human plays for the bot to move
-  if (!timerStarted && currentPlayer === WHITE && mode === "pvb"){
+  if (!timerStarted && shared.currentPlayer === WHITE && mode === "pvb"){
     setTimeout(botMoves, 1000);
     timerStarted = true;
   }
@@ -300,7 +307,7 @@ function startBotTimer(){
 
 function botMoves(){
   //the bot will always be white
-  if(currentPlayer === WHITE && mode === "pvb"){
+  if(shared.currentPlayer === WHITE && mode === "pvb"){
 
     //intializing variables...
     let maxGain = 0;
@@ -368,23 +375,23 @@ function displayGrid(){
     for(let x = 0; x<GRID_DIMENSIONS; x++){
 
       //draws a black tile on a black square
-      if (drawingGrid[y][x]===BLACK){
+      if (shared.drawingGrid[y][x]===BLACK){
         image(blackTile, startingImageX+x*gridUnit, startingImageY+y*gridUnit, blackTile.width*resizingRatio, blackTile.height*resizingRatio);
       }
 
       //draws a white tile on a white square
-      else if (drawingGrid[y][x]===WHITE){
+      else if (shared.drawingGrid[y][x]===WHITE){
         image(whiteTile, startingImageX+x*gridUnit, startingImageY+y*gridUnit, whiteTile.width*resizingRatio, whiteTile.height*resizingRatio);
       }
 
       //since animated tiles are objects, they won't be registered as being white, black, or empty
-      else if (drawingGrid[y][x] !== EMPTY){
+      else if (shared.drawingGrid[y][x] !== EMPTY){
 
         //selects the correct frame out of the animation frame array
-        let img = animationFrameArray[drawingGrid[y][x].animationFrame];
+        let img = animationFrameArray[shared.drawingGrid[y][x].animationFrame];
 
         //the size will be greater when the animation frame is closer to the middle - this allows the tile to appear "higher up" when in mid-air
-        let sizeFactor = (-abs(drawingGrid[y][x].animationFrame-6)+7)/10;
+        let sizeFactor = (-abs(shared.drawingGrid[y][x].animationFrame-6)+7)/10;
 
         //displays the animation frame
         image(img, startingImageX+x*gridUnit, startingImageY+y*gridUnit,img.width*resizingRatio, img.height*resizingRatio+img.height*sizeFactor);
@@ -394,24 +401,24 @@ function displayGrid(){
       if(frameCount%ANIMATION_DELAY === 0){
 
         //the animation moves forward to turn into a white tile
-        if (drawingGrid[y][x].number === WHITE){
-          drawingGrid[y][x].animationFrame ++;
+        if (shared.drawingGrid[y][x].number === WHITE){
+          shared.drawingGrid[y][x].animationFrame ++;
         }
 
         //backwards to turn into a black tile
-        else if (drawingGrid[y][x].number === BLACK){
-          drawingGrid[y][x].animationFrame --;
+        else if (shared.drawingGrid[y][x].number === BLACK){
+          shared.drawingGrid[y][x].animationFrame --;
         }
 
         //if it is at the end of the animation, it turns back into a regular tile
-        if(drawingGrid[y][x].animationFrame === 0 || drawingGrid[y][x].animationFrame ===12){
-          drawingGrid[y][x] = drawingGrid[y][x].number;
+        if(shared.drawingGrid[y][x].animationFrame === 0 || shared.drawingGrid[y][x].animationFrame ===12){
+          shared.drawingGrid[y][x] = shared.drawingGrid[y][x].number;
         }
       }
 
       //will only display the possible moves (50% opacity) if the player is a human
-      if (movesArray[y][x] && (mode === "pvp" || currentPlayer === BLACK)){
-        let theImage = currentPlayer - 1 ? blackGhostTile: whiteGhostTile;
+      if (movesArray[y][x] && (mode === "pvp" && (shared.currentPlayer === BLACK && partyIsHost()|| shared.currentPlayer === WHITE && !partyIsHost()))){
+        let theImage = shared.currentPlayer - 1 ? blackGhostTile: whiteGhostTile;
         image(theImage,startingImageX+x*gridUnit, startingImageY+y*gridUnit, theImage.width*resizingRatio, theImage.height*resizingRatio);
       }
     }
@@ -431,7 +438,7 @@ function displayScore(){
   text(whiteTileCount, width/2+6*gridUnit, height/2+gridUnit*0.5);
 
   //the tile that is opaque will indicate the current player
-  if (currentPlayer === BLACK){
+  if (shared.currentPlayer === BLACK){
     image(blackTile, width/2-6*gridUnit, height/2-gridUnit, blackTile.width*resizingRatio*1.5, blackTile.height*resizingRatio*1.5);
     image(whiteGhostTile, width/2+6*gridUnit, height/2-gridUnit, whiteTile.width*resizingRatio*1.5, whiteTile.height*resizingRatio*1.5);
   }
@@ -471,7 +478,7 @@ function setCursor(){
   let y = Math.floor((mouseY-startingMouseY)/gridUnit);
 
   //if the mouse is on a tile that can be played, the cursor changes to a hand
-  if (y<GRID_DIMENSIONS && y>=0 && x<GRID_DIMENSIONS && x>=0 && movesArray[y][x]&&(currentPlayer === BLACK || mode === "pvp")){
+  if (y<GRID_DIMENSIONS && y>=0 && x<GRID_DIMENSIONS && x>=0 && movesArray[y][x]&&(shared.currentPlayer === BLACK || mode === "pvp")){
     cursor(HAND);
   }
   else{
@@ -490,7 +497,7 @@ function mousePressed(){
   let playerY = Math.floor((mouseY-startingMouseY)/gridUnit);
 
   //either the mode is pvp and either colour can play by clicking, or it is against the bot and only black can play by clicking
-  if(mode === "pvp" || currentPlayer === BLACK){
+  if(mode === "pvp" && (shared.currentPlayer === BLACK && partyIsHost()|| shared.currentPlayer === WHITE && !partyIsHost())){
     if (playerX >=0 && playerX <GRID_DIMENSIONS && playerY >= 0 && playerY < GRID_DIMENSIONS){
       playerMoves(playerX, playerY);
     }
@@ -504,6 +511,7 @@ function keyPressed(){
     mode = "pvp";
   }
   else if (key === "b" && mode === "pvp"){
+    partyDisconnect();
     resetGame();
     mode = "pvb";
   }
@@ -514,10 +522,11 @@ function keyPressed(){
 
 function resetGame(){
   //resets the game board
-  grid = generateStartGrid();
-  drawingGrid = structuredClone(grid);
+  shared.grid = generateStartGrid();
+  shared.drawingGrid = generateStartGrid();
+  shared.movesArray = generateEmptyGrid();
   gameOver = false;
-  currentPlayer = WHITE;
+  shared.currentPlayer = WHITE;
   updateTileCount();
   toggleCurrentPlayer();
 }
