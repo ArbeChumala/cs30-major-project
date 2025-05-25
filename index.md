@@ -1,3 +1,4 @@
 # CS 30 Major Project
 - [Knockout](knockout)
-- [Shuffleboard](shuffleboard)
+- [Pool](pool)
+- [Reversi](reversi)
