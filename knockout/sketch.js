@@ -16,6 +16,7 @@ engine.gravity.y=0;
 let shared = {
   penguinBodies: [],
   penguinArrows: [],
+  penguinsStationary: false,
   isUpdating: true,
 };
 
@@ -42,7 +43,9 @@ function preload(){
 function setup(){
   createCanvas(windowWidth, windowHeight);
 
-  if(partyIsHost()){    
+  if(partyIsHost()){
+    partySetShared("shared", shared);
+
     for(let i = 0; i<8; i++){
       let x = random((width - squareWidth)/2,(width + squareWidth)/2 );
       let y = random((height - squareWidth)/2, (height + squareWidth)/2);
@@ -72,9 +75,6 @@ function setup(){
     }
 
   }
-  else{
-    draw();
-  }
 }
 
 function draw(){
@@ -101,19 +101,28 @@ function draw(){
     shared.isUpdating = false;
   }
   else{
-    if(true){
-      for(let i = 0; i<shared.penguinBodies.length; i++){
-        push();
-      
-        translate(shared.penguinBodies[i].x, shared.penguinBodies[i].y);
-  
-        fill(shared.penguinBodies[i].red, shared.penguinBodies[i].green, shared.penguinBodies[i].blue);
+    if(shared.penguinsStationary){
+      for(let i = 0; i<shared.penguinArrows.length; i++){
+        stroke(shared.penguinArrows[i].red, shared.penguinArrows[i].green, shared.penguinArrows[i].blue);
+        strokeCap(ROUND);
+        strokeWeight(5);
+        line(shared.penguinArrows[i].x, shared.penguinArrows[i].y, shared.penguinArrows[i].penguinX, shared.penguinArrows[i].penguinY);
         noStroke();
-  
-        circle(0, 0, shared.penguinBodies[i].r * 2);
-  
-        pop();
       }
+    }
+    for(let i = 0; i<shared.penguinBodies.length; i++){
+      push();
+    
+      translate(shared.penguinBodies[i].x, shared.penguinBodies[i].y);
+
+      rotate(shared.penguinBodies[i].angle);
+
+      fill(shared.penguinBodies[i].red, shared.penguinBodies[i].green, shared.penguinBodies[i].blue);
+      noStroke();
+
+      circle(0, 0, shared.penguinBodies[i].r * 2);
+
+      pop();
     }
   }
 }
@@ -280,7 +289,10 @@ class Arrow{
     this.y = this.chooseY();
 
     this.activity = false;
-    this.colour = "black";
+
+    this.red = 0;
+    this.green = 0;
+    this.blue = 0;
 
     this.stationaryLastFrame = true;
 
@@ -289,7 +301,9 @@ class Arrow{
       penguinY: this.penguinY,
       x: this.x,
       y: this.y,
-      colour: this.colour,
+      red: this.red,
+      green: this.green,
+      blue: this.blue,
       id: this.id,
     };
 
@@ -299,8 +313,9 @@ class Arrow{
   show(){
     //the penguins have been stationary
     if(penguinsStationary() && this.stationaryLastFrame){
+      shared.penguinsStationary = true;
       //draw the line
-      stroke(this.colour);
+      stroke(this.red, this.green, this.blue);
       strokeCap(ROUND);
       strokeWeight(5);
   
@@ -317,6 +332,7 @@ class Arrow{
 
     //the penguins are moving
     else if(!penguinsStationary()){
+      shared.penguinsStationary = false;
       this.stationaryLastFrame = false;
     }
   }
@@ -336,7 +352,9 @@ class Arrow{
       penguinY: this.penguinY,
       x: this.x,
       y: this.y,
-      party: this.colour,
+      red: this.red,
+      green:this.green,
+      blue:this.blue,
       id: this.id,
     };
 
