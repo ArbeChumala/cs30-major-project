@@ -16,6 +16,7 @@ engine.gravity.y=0;
 let shared = {
   penguinBodies: [],
   penguinArrows: [],
+  isUpdating: true,
 };
 
 // penguin arrays
@@ -25,6 +26,7 @@ let squareWidth = 600;
 
 let indexToArrayMap = new Map();
 
+
 //constants
 const PENGUIN_RADIUS = 20;
 
@@ -33,14 +35,14 @@ let runner = Runner.create();
 Runner.run(runner, engine);
 
 function preload(){
-  partyConnect("wss://demoserver.p5party.org", "sarbechurdell-knockout", "main");
+  partyConnect("wss://demoserver.p5party.org", "our-amazing-knockout-game", "main");
   shared = partyLoadShared("shared", shared);
 }
 
 function setup(){
   createCanvas(windowWidth, windowHeight);
 
-  if(partyIsHost()){
+  if(partyIsHost()){    
     for(let i = 0; i<8; i++){
       let x = random((width - squareWidth)/2,(width + squareWidth)/2 );
       let y = random((height - squareWidth)/2, (height + squareWidth)/2);
@@ -62,6 +64,16 @@ function setup(){
       let somePenguin = new Penguin(x, y, red, green, blue, i);
       penguins.push(somePenguin);
     }
+    
+    updateIndexToArrayMap();
+
+    for(let penguin of penguins){
+      penguin.updateShared();
+    }
+
+  }
+  else{
+    draw();
   }
 }
 
@@ -72,8 +84,7 @@ function draw(){
   square(width/2, height/2, squareWidth);
 
   if(partyIsHost()){
-    shared.penguinBodies = [];
-    shared.penguinArrows = [];
+    shared.isUpdating = true;
 
     for(i = penguins.length - 1; i>=0; i--){
       penguins[i].updateShared();
@@ -82,24 +93,27 @@ function draw(){
   
       if(penguins[i].isDead()){
         penguins.splice(i, 1);
+        shared.penguinBodies.splice(i, 1);
+        shared.penguinArrows.splice(i, 1);
         updateIndexToArrayMap();
       }
     }
-
+    shared.isUpdating = false;
   }
   else{
-    for(let penguin of shared.penguinBodies){
-      push();
-    
-      translate(penguin.x, penguin.y);
-      rotate(penguin.angle);
-
-      fill(penguin.red, penguin.green, penguin.blue);
-      noStroke();
-
-      circle(0, 0, penguin.r * 2);
-
-      pop();
+    if(true){
+      for(let i = 0; i<shared.penguinBodies.length; i++){
+        push();
+      
+        translate(shared.penguinBodies[i].x, shared.penguinBodies[i].y);
+  
+        fill(shared.penguinBodies[i].red, shared.penguinBodies[i].green, shared.penguinBodies[i].blue);
+        noStroke();
+  
+        circle(0, 0, shared.penguinBodies[i].r * 2);
+  
+        pop();
+      }
     }
   }
 }
