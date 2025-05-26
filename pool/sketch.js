@@ -20,9 +20,10 @@ Runner.run(runner, engine);
 let radius = 20;
 let balls = [];
 let coloursList = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "lightgreen", "lightblue"];
-let ballsMoving = false;
+let ballsMovingVar = false;
 let isDrawnBack = false;
 let cueSpeedFactor = 20;
+let velocityRatio = 20;
 
 
 
@@ -67,19 +68,36 @@ function setup() {
 
 function draw() {
   background(220);
+  let ballX;
+  let ballY;
   for (let ball of balls) {
     ball.show();
+    if (ball.cueBall) {
+      ballX = ball.x;
+      ballY = ball.y;
+    }
   }
-  cue.update();
-  cue.show();
+  if (!ballsMoving()) {
+    cue.update(ballX, ballY);
+    cue.show();
+  }
 }
 
+function ballsMoving() {
+  for (let ball of balls) {
+    if (ball.isMoving()) {
+      return true;
+    }
+  }
+  console.log("notmoving");
+  return false;
+}
 // function mousePressed() {
 //   let aBall = new Ball(mouseX, mouseY, "red", true);
 //   balls.push(aBall);
 // }
 
-
+// ---------------------------------------------------------------------------------------------------------
 // Classes
 // ---------------------------------------------------------------------------------------------------------
 
@@ -93,7 +111,7 @@ class Ball {
     this.cueBall = cueBall;
 
     let options = {
-      restitution: 0.1,
+      restitution: 10,
     };
 
     this.body = Bodies.circle(this.x, this.y, radius, {options});
@@ -116,16 +134,15 @@ class Ball {
     pop();
   }
 
-  update() {
-    
+  update(distanceX, distanceY) {
+    let velocity = Vector.create(distanceX, distanceY);
+    Body.setVelocity(this.body, velocity);
   }
 
-  strikeCueBall(dx, dy) {
-    for (let ball of balls) {
-      if (this.cueBall) {
-        this.body.velocity(dx, dy);
-      }
-    }
+  isMoving() {
+    let results = Body.getVelocity(this.body) === 0;
+    console.log(results);
+    return results;
   }
 }
 
@@ -153,11 +170,18 @@ class Cue {
     this.isDrawnBack = false;
   };
 
-  update() {
+  update(newBallY, newBallX) {
     this.distance = dist(this.x, this.y, this.ballX, this.ballY);
     this.strikeDistance = dist(this.strikeX, this.strikeY, this.ballX, this.ballY);
-    
-    if (this.movingIn) {
+    if (ballsMoving()) {
+      this.ballY = newBallY;
+      this.ballX = newBallX;
+      this.strikeX = newBallX;
+      this.strikeY = newBallY;
+      this.x = newBallX - 100;
+      this.y = newBallY;
+    }
+    else if (this.movingIn) {
       this.x -= this.strikeRatio * this.distanceX / cueSpeedFactor;
       this.y -= this.strikeRatio * this.distanceY / cueSpeedFactor;
 
@@ -167,9 +191,14 @@ class Cue {
       if (this.distance < 100 + radius) {
         console.log("baddabing");
         this.movingIn = false;
+        for (let ball of balls) {
+          if (ball.cueBall) {
+            ball.update(- this.distanceX / velocityRatio, - this.distanceY / velocityRatio);
+          }
+        }
       }
     }
-    else if (mouseIsPressed && mouseX < this.x + 25 && mouseX > this.x - 25 && mouseY > this.y - 25 && mouseY < this.y + 25 &&this.distance >= 100) {
+    else if (mouseIsPressed && mouseX < this.x + 25 && mouseX > this.x - 25 && mouseY > this.y - 25 && mouseY < this.y + 25 &&this.distance >= 50) {
       this.ratio = 100 /this.distance;
       this.strikeRatio = 100 / this.strikeDistance;
       
