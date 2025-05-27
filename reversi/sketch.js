@@ -26,7 +26,7 @@ let gameOver = false;
 let currentPlayer = WHITE;
 let whiteTileCount = 2;
 let blackTileCount = 2;
-let mode = "pvb";
+let mode = "pvp";
 let timerStarted = false;
 
 let mostCurrentClickX;
@@ -36,6 +36,12 @@ let mostCurrentClickY;
 let grid = generateStartGrid();
 let drawingGrid = structuredClone(grid);
 let movesArray;
+
+//shared object;
+let shared = {
+  playerX: 9,
+  playerY: 9,
+};
 
 //images, fonts, and animation frames
 let whiteTile;
@@ -68,6 +74,9 @@ function preload(){
   for (let i = 0; i<=12; i++){
     animationFrameArray.push(loadImage(`assets/animation-frames/${i}.png`));
   }
+  
+  partyConnect("wss://demoserver.p5party.org", "our-amazing-reversi-game", "main");
+  shared = partyLoadShared("shared");
 }
 
 function setup(){
@@ -80,6 +89,8 @@ function setup(){
   textFont(gameFont);
   textSize(40);
   fill(255);
+
+  partyWatchShared(shared, playerMoves, true);
 }
 
 function windowResized(){
@@ -197,7 +208,9 @@ function findMoves(thePlayer) {
   return moveFound;
 }
 
-function playerMoves(x, y){
+function playerMoves(object){
+  let x = object.playerX;
+  let y = object.playerY;
   //only makes a move if it is a legal move (at least one tile will be gained)
   if (movesArray[y][x]){
     changeGrid(x, y);
@@ -493,12 +506,14 @@ function mousePressed(){
   let playerY = Math.floor((mouseY-startingMouseY)/gridUnit);
 
   //either the mode is pvp and either colour can play by clicking, or it is against the bot and only black can play by clicking
-  if(mode === "pvp" || currentPlayer === BLACK){
+  if(mode === "pvp" && (currentPlayer === BLACK && partyIsHost() || currentPlayer === WHITE && !partyIsHost())){
     if (playerX >=0 && playerX <GRID_DIMENSIONS && playerY >= 0 && playerY < GRID_DIMENSIONS){
-      playerMoves(playerX, playerY);
+      shared.playerX = playerX;
+      shared.playerY = playerY;
     }
   }
 }
+
 
 function keyPressed(){
   //switches the mode
