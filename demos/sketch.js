@@ -27,6 +27,12 @@ class Boundary{
       isStatic: true,
     };
 
+    this.x1 = x - w / 2;
+    this.y1 = y - h / 2;
+    this.x2 = x + w / 2;
+    this.y2 = y - h / 2;
+
+
     this.body = Bodies.rectangle(this.x, this.y, this.w, this.h, this.options);
     Composite.add(world, this.body);
   }

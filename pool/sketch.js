@@ -19,6 +19,7 @@ Runner.run(runner, engine);
 
 let radius = 20;
 let balls = [];
+let walls = [];
 let coloursList = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "lightgreen", "lightblue"];
 let ballsMovingVar = false;
 let isDrawnBack = false;
@@ -29,6 +30,40 @@ let velocityRatio = 20;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  createBalls();
+  createBoundaries();
+}
+
+function draw() {
+  background(220);
+  let ballX;
+  let ballY;
+  for (let ball of balls) {
+    ball.show();
+    if (ball.cueBall) {
+      ballX = ball.x;
+      ballY = ball.y;
+    }
+  }
+  if (!ballsMoving()) {
+    cue.update(ballX, ballY);
+    cue.show();
+  }
+  for (let wall of walls) {
+    wall.show();
+  }
+}
+
+function ballsMoving() {
+  for (let ball of balls) {
+    if (ball.isMoving()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function createBalls() {
   let isStriped = true;
   let x = 2 * width / 3;
   let y = height / 2;
@@ -41,13 +76,9 @@ function setup() {
       counter.splice(0, 1);
       lastCounter --;
     }
-    console.log(counter);
     let aBall;
     for (let number of counter) {
-      console.log(number);
       let yModifier = number - counter[lastCounter] / 2;
-      console.log(yModifier);
-      console.log(counter);
       if (lastCounter === 2 && number === 1) {
         aBall = new Ball(x + lastCounter * 25 * 2**(1/2), y + yModifier * 30 * 2**(1/2), "black", false, true, false);
       }
@@ -66,31 +97,18 @@ function setup() {
   balls.push(aBall);
 }
 
-function draw() {
-  background(220);
-  let ballX;
-  let ballY;
-  for (let ball of balls) {
-    ball.show();
-    if (ball.cueBall) {
-      ballX = ball.x;
-      ballY = ball.y;
-    }
-  }
-  if (!ballsMoving()) {
-    cue.update(ballX, ballY);
-    cue.show();
-  }
-}
+function createBoundaries() {
+  let leftWall = new Wall(width / 8, height / 2, 10,  3 * height / 4);
+  let topWall = new Wall(width / 2, height / 8, 3 * width / 4, 10);
+  let rightWall = new Wall(7 * width / 8, height / 2, 10, 3 * height / 4);
+  let bottomWall = new Wall(width / 2, 7 * height / 8, 3 * width / 4, 10);
+  walls.push(leftWall);
+  walls.push(rightWall);
+  walls.push(topWall);
+  walls.push(bottomWall);
+  
 
-function ballsMoving() {
-  for (let ball of balls) {
-    if (ball.isMoving()) {
-      return true;
-    }
-  }
-  console.log("notmoving");
-  return false;
+
 }
 // function mousePressed() {
 //   let aBall = new Ball(mouseX, mouseY, "red", true);
@@ -110,11 +128,12 @@ class Ball {
     this.eightBall = eightBall;
     this.cueBall = cueBall;
 
-    let options = {
-      restitution: 10,
+    this.options = {
+      restitution: 0.8,
+      slop: 0.05,
     };
 
-    this.body = Bodies.circle(this.x, this.y, radius, {options});
+    this.body = Bodies.circle(this.x, this.y, radius, this.options);
     Composite.add(world, this.body);
   }
 
@@ -141,7 +160,6 @@ class Ball {
 
   isMoving() {
     let results = Body.getVelocity(this.body) === 0;
-    console.log(results);
     return results;
   }
 }
@@ -189,7 +207,6 @@ class Cue {
       this.strikeY -= this.strikeRatio * this.distanceY / cueSpeedFactor;
 
       if (this.distance < 100 + radius) {
-        console.log("baddabing");
         this.movingIn = false;
         for (let ball of balls) {
           if (ball.cueBall) {
@@ -225,7 +242,6 @@ class Cue {
     else if (this.isDrawnBack && !mouseIsPressed) {
       this.dx ++;
       this.dy ++;
-      console.log("hi");
       this.movingIn = true;
       this.isDrawnBack = false;
 
@@ -242,5 +258,34 @@ class Cue {
     line(this.x, this.y, this.strikeX, this.strikeY);
   }
 
+}
+
+class Wall {
+  constructor(x, y, w, h){
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.options = {
+      isStatic: true,
+      restitution: 0.8,
+      slop: 0.1,
+    };
+
+    this.x1 = x - w / 2;
+    this.y1 = y - h / 2;
+    this.x2 = x + w / 2;
+    this.y2 = y + h / 2;
+
+    this.body = Bodies.rectangle(this.x, this.y, this.w, this.h, this.options);
+    Composite.add(world, this.body);
+  }
+
+  show(){
+    push();
+    fill("blue");
+    quad(this.x1, this.y1, this.x1, this.y2, this.x2, this.y2, this.x2, this.y1);
+    pop();
+  }
 }
 
