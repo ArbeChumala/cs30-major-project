@@ -29,8 +29,8 @@ let blackTileCount = 2;
 let mode = "pvp";
 let timerStarted = false;
 
-let mostCurrentClickX;
-let mostCurrentClickY;
+let currentClickX;
+let currentClickY;
 
 //grids
 let grid = generateStartGrid();
@@ -39,8 +39,8 @@ let movesArray;
 
 //shared object;
 let shared = {
-  playerX: 9,
-  playerY: 9,
+  playerX: undefined,
+  playerY: undefined,
 };
 
 //images, fonts, and animation frames
@@ -77,6 +77,7 @@ function preload(){
   
   partyConnect("wss://demoserver.p5party.org", "our-amazing-reversi-game", "main");
   shared = partyLoadShared("shared");
+  partySetShared("shared", {playerX: undefined, playerY: undefined});
 }
 
 function setup(){
@@ -90,6 +91,8 @@ function setup(){
   textSize(40);
   fill(255);
 
+  
+  resetGame();
   partyWatchShared(shared, playerMoves, true);
 }
 
@@ -212,7 +215,7 @@ function playerMoves(object){
   let x = object.playerX;
   let y = object.playerY;
   //only makes a move if it is a legal move (at least one tile will be gained)
-  if (movesArray[y][x]){
+  if (x < GRID_DIMENSIONS && x >= 0 && y< GRID_DIMENSIONS && y>= 0 && movesArray[y][x]){
     changeGrid(x, y);
     updateTileCount();
     toggleCurrentPlayer();
