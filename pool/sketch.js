@@ -41,14 +41,14 @@ function draw() {
   for (let ball of balls) {
     ball.show();
     if (ball.cueBall) {
-      ballX = ball.x;
-      ballY = ball.y;
+      ballX = ball.body.position.x;
+      ballY = ball.body.position.y;
     }
   }
   if (!ballsMoving()) {
-    cue.update(ballX, ballY);
     cue.show();
   }
+  cue.update(ballX, ballY);
   for (let wall of walls) {
     wall.show();
   }
@@ -106,9 +106,6 @@ function createBoundaries() {
   walls.push(rightWall);
   walls.push(topWall);
   walls.push(bottomWall);
-  
-
-
 }
 // function mousePressed() {
 //   let aBall = new Ball(mouseX, mouseY, "red", true);
@@ -131,6 +128,7 @@ class Ball {
     this.options = {
       restitution: 0.8,
       slop: 0.05,
+      friction: 0.25,
     };
 
     this.body = Bodies.circle(this.x, this.y, radius, this.options);
@@ -138,6 +136,10 @@ class Ball {
   }
 
   show() {
+    if (Math.abs(this.body.velocity.x) < 0.1 && Math.abs(this.body.velocity.y) < 0.1) {
+      let stationary = Vector.create(0, 0);
+      Body.setVelocity(this.body, stationary);
+    }
     push();
     let pos = this.body.position;
     let angle = this.body.angle;
@@ -154,13 +156,15 @@ class Ball {
   }
 
   update(distanceX, distanceY) {
-    let velocity = Vector.create(distanceX, distanceY);
-    Body.setVelocity(this.body, velocity);
+    this.velocity = Vector.create(distanceX, distanceY);
+    Body.setVelocity(this.body, this.velocity);
   }
 
   isMoving() {
-    let results = Body.getVelocity(this.body) === 0;
-    return results;
+    if (this.body.velocity.x === 0 && this.body.velocity.y === 0) {
+      return false;
+    }
+    return true;
   }
 }
 
@@ -189,15 +193,21 @@ class Cue {
   };
 
   update(newBallY, newBallX) {
+    console.log(newBallX, newBallY);
+
     this.distance = dist(this.x, this.y, this.ballX, this.ballY);
     this.strikeDistance = dist(this.strikeX, this.strikeY, this.ballX, this.ballY);
     if (ballsMoving()) {
+      console.log("balls are moving");
       this.ballY = newBallY;
       this.ballX = newBallX;
-      this.strikeX = newBallX;
-      this.strikeY = newBallY;
-      this.x = newBallX - 100;
-      this.y = newBallY;
+      this.x = this.ballX - 100 - radius;
+      this.y = this.ballY;
+      this.dx = 0;
+      this.dy = 0;
+
+      this.strikeX = this.ballX;
+      this.strikeY = this.ballY;
     }
     else if (this.movingIn) {
       this.x -= this.strikeRatio * this.distanceX / cueSpeedFactor;
