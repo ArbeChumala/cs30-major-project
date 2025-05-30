@@ -45,10 +45,12 @@ function draw() {
       ballY = ball.body.position.y;
     }
   }
-  if (!ballsMoving()) {
+
+  let showCue = !ballsMoving();
+  if (showCue) {
     cue.show();
+    cue.update(ballX, ballY);
   }
-  cue.update(ballX, ballY);
   for (let wall of walls) {
     wall.show();
   }
@@ -175,8 +177,6 @@ class Cue {
 
     this.x = ballX - 100 - radius;
     this.y = ballY;
-    this.dx = 0;
-    this.dy = 0;
 
     this.strikeX = ballX;
     this.strikeY = ballY;
@@ -190,26 +190,30 @@ class Cue {
     this.strikeRatio;
 
     this.isDrawnBack = false;
+    this.justStoppedMoving = false;
   };
 
   update(newBallY, newBallX) {
-    console.log(newBallX, newBallY);
+    this.ballY = newBallY;
+    this.ballX = newBallX;
 
     this.distance = dist(this.x, this.y, this.ballX, this.ballY);
     this.strikeDistance = dist(this.strikeX, this.strikeY, this.ballX, this.ballY);
-    if (ballsMoving()) {
-      console.log("balls are moving");
-      this.ballY = newBallY;
-      this.ballX = newBallX;
-      this.x = this.ballX - 100 - radius;
-      this.y = this.ballY;
-      this.dx = 0;
-      this.dy = 0;
+    
 
-      this.strikeX = this.ballX;
-      this.strikeY = this.ballY;
-    }
-    else if (this.movingIn) {
+    //   this.x = this.ballX - 100 - radius;
+    //   this.y = this.ballY;
+    //   this.dx = 0;
+    //   this.dy = 0;
+
+    //   this.strikeX = newBallX;
+    //   this.strikeY = newBallY;
+    //   this.justStoppedMoving = true;
+    // }
+    // else if (this.justStoppedMoving) {
+      
+    // }
+    if (this.movingIn) {
       this.x -= this.strikeRatio * this.distanceX / cueSpeedFactor;
       this.y -= this.strikeRatio * this.distanceY / cueSpeedFactor;
 
