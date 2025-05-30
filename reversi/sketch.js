@@ -91,8 +91,6 @@ function setup(){
   textSize(40);
   fill(255);
 
-  
-  resetGame();
   partySubscribe("resetGame", resetGame);
   partyWatchShared(shared, playerMoves, true);
 }
