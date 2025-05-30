@@ -93,6 +93,7 @@ function setup(){
 
   
   resetGame();
+  partySubscribe("resetGame", resetGame);
   partyWatchShared(shared, playerMoves, true);
 }
 
@@ -529,6 +530,7 @@ function keyPressed(){
     mode = "pvb";
   }
   else if (key === "r"){
+    partyEmit("resetGame");
     resetGame();
   }
 }
