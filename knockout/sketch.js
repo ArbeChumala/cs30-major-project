@@ -18,6 +18,8 @@ let penguins = [];
 let arrows = [];
 let squareWidth = 600;
 
+let shared = [];
+
 //constants
 const PENGUIN_RADIUS = 20;
 
@@ -25,13 +27,24 @@ const PENGUIN_RADIUS = 20;
 let runner = Runner.create();
 Runner.run(runner, engine);
 
+function preload(){
+  partyConnect(
+    "wss://demoserver.p5party.org", 
+    "our-amazing-knockout-game", 
+    "main"
+  );
+  shared = partyLoadShared("shared");
+  partySetShared("shared", []);
+}
+
 function setup(){
   createCanvas(windowWidth, windowHeight);
   for(let i = 0; i<8; i++){
     let x = i < 4 ? width/2 - PENGUIN_RADIUS*(i%2 + 1)*5 : width/2 + PENGUIN_RADIUS*(i%2 + 1)*5 ;
     let y = i % 2 === 0 ? height/2 - squareWidth/4 : height/2 + squareWidth/4;
     let colour = i%2 === 0 ? color(80, 150, 200) : color((10, 10, 10)) ;
-    let somePenguin = new Penguin(x, y, colour);
+    let team = i%2 === 0 ? "host" : "guest";
+    let somePenguin = new Penguin(x, y, colour, team, i);
     penguins.push(somePenguin);
   }
 }
@@ -86,14 +99,18 @@ function keyPressed(){
 //classes
 //-----------------------------------------------------------------------------------------------
 class Penguin{
-  constructor(x, y, colour){
+  constructor(x, y, colour, team, id){
     this.x = x;
     this.y = y;
     this.r = PENGUIN_RADIUS;
     this.colour = colour;
+    this.team = team;
+    this.id = id;
     
-    this.arrow = new Arrow(this.x, this.y);
-    arrows.push(this.arrow);
+    if(partyIsHost() && this.team === "host" || !partyIsHost && this.team === "guest"){
+      this.arrow = new Arrow(this.x, this.y, this.id);
+      arrows.push(this.arrow);
+    }
 
     let options = {
       restitution: 0.1
@@ -137,12 +154,18 @@ class Penguin{
     }
   }
 
-  resetVelocity(){
-    let dx = (this.arrow.x - this.arrow.penguinX)*0.05;
-    let dy = (this.arrow.y - this.arrow.penguinY)*0.05;
-    let velocity = Vector.create(dx, dy);
+  sendVelocity(){
+    if(partyIsHost() && this.team === "host" || !partyIsHost && this.team === "guest"){
+      let dx = (this.arrow.x - this.arrow.penguinX)*0.05;
+      let dy = (this.arrow.y - this.arrow.penguinY)*0.05;
+      let velocity = Vector.create(dx, dy);
+  
+      shared[this.id] = velocity;
+    }
+  }
 
-    Body.setVelocity(this.body, velocity);
+  recieveVelocity(){
+    Body.setVelocity(this.body, shared[this.id]);
   }
 
   isDying(){
