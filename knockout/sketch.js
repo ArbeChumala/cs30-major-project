@@ -18,6 +18,10 @@ let penguins = [];
 let arrows = [];
 let squareWidth = 600;
 
+let hostStatus;
+
+let playersReady = 0;
+
 let shared = [];
 
 //constants
@@ -35,17 +39,34 @@ function preload(){
   );
   shared = partyLoadShared("shared");
   partySetShared("shared", []);
+
+  hostStatus = partyIsHost() ? "host" : "guest";
 }
 
 function setup(){
   createCanvas(windowWidth, windowHeight);
   for(let i = 0; i<8; i++){
-    let x = i < 4 ? width/2 - PENGUIN_RADIUS*(i%2 + 1)*5 : width/2 + PENGUIN_RADIUS*(i%2 + 1)*5 ;
+    let x = i < 4 ? width/2 - PENGUIN_RADIUS*(i%2 + 10) : width/2 + PENGUIN_RADIUS*(i%2 + 10);
     let y = i % 2 === 0 ? height/2 - squareWidth/4 : height/2 + squareWidth/4;
     let colour = i%2 === 0 ? color(80, 150, 200) : color((10, 10, 10)) ;
     let team = i%2 === 0 ? "host" : "guest";
     let somePenguin = new Penguin(x, y, colour, team, i);
     penguins.push(somePenguin);
+  }
+
+  partySubscribe("playerReady", playerReady);
+}
+
+function playerReady(){
+  playersReady ++;
+  if(playersReady === 2){
+    for(let penguin of penguins){
+      penguin.sendVelocity();
+    }
+    for(let penguin of penguins){
+      penguin.recieveVelocity();
+    }
+    playersReady === 0;
   }
 }
 
@@ -89,9 +110,8 @@ function penguinsStationary(){
 
 function keyPressed(){
   if(key === "p"){
-    for(let penguin of penguins){
-      penguin.resetVelocity();
-    }
+    partyEmit("playerIsReady");
+    playerReady();
   }
 }
 
@@ -107,7 +127,7 @@ class Penguin{
     this.team = team;
     this.id = id;
     
-    if(partyIsHost() && this.team === "host" || !partyIsHost && this.team === "guest"){
+    if(this.team === hostStatus){
       this.arrow = new Arrow(this.x, this.y, this.id);
       arrows.push(this.arrow);
     }
@@ -123,7 +143,9 @@ class Penguin{
   show(){
     this.update();
 
-    this.arrow.show();
+    if(this.team === hostStatus){
+      this.arrow.show();
+    }
 
     push();
     
@@ -142,7 +164,10 @@ class Penguin{
     this.x = this.body.position.x;
     this.y = this.body.position.y;
     this.angle = this.body.angle;
-    this.arrow.update(this.x, this.y);
+
+    if(this.team === hostStatus){
+      this.arrow.update(this.x, this.y);
+    }
 
     if (this.isDying()){
       this.r *= 0.9;
@@ -155,7 +180,7 @@ class Penguin{
   }
 
   sendVelocity(){
-    if(partyIsHost() && this.team === "host" || !partyIsHost && this.team === "guest"){
+    if(this.team === hostStatus){
       let dx = (this.arrow.x - this.arrow.penguinX)*0.05;
       let dy = (this.arrow.y - this.arrow.penguinY)*0.05;
       let velocity = Vector.create(dx, dy);
