@@ -28,8 +28,8 @@ Runner.run(runner, engine);
 function setup(){
   createCanvas(windowWidth, windowHeight);
   for(let i = 0; i<8; i++){
-    let x = (width-squareWidth)/2 + PENGUIN_RADIUS*(3*i-2);
-    let y = random((height - squareWidth)/2, (height + squareWidth)/2);
+    let x = i < 4 ? width/2 - PENGUIN_RADIUS*(i%2 + 1)*5 : width/2 + PENGUIN_RADIUS*(i%2 + 1)*5 ;
+    let y = i % 2 === 0 ? height/2 - squareWidth/4 : height/2 + squareWidth/4;
     let colour = i%2 === 0 ? color(80, 150, 200) : color((10, 10, 10)) ;
     let somePenguin = new Penguin(x, y, colour);
     penguins.push(somePenguin);
