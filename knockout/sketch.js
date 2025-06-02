@@ -18,11 +18,13 @@ let penguins = [];
 let arrows = [];
 let squareWidth = 400;
 
+let intervalID;
+
 let hostStatus;
 
 let playersReady = 0;
 
-let shared = [, , , , , , ,];
+let shared = [[],[],[],[],[],[],[],[]];
 
 //constants
 const PENGUIN_RADIUS = 20;
@@ -38,7 +40,7 @@ function preload(){
     "main"
   );
   shared = partyLoadShared("shared");
-  partySetShared("shared", []);
+  partySetShared("shared", [[],[],[],[],[],[],[],[]]);
 
 }
 
@@ -84,10 +86,15 @@ function playerReady(){
     for(let penguin of penguins){
       penguin.sendVelocity();
     }
-    for(let penguin of penguins){
-      penguin.recieveVelocity();
-    }
-    playersReady === 0;
+    intervalID = setInterval(recieveVelocities, 1000);
+    playersReady = 0;
+  }
+}
+
+function recieveVelocities(){
+  clearInterval(intervalID);
+  for(let penguin of penguins){
+    penguin.recieveVelocity();
   }
 }
 
@@ -219,7 +226,7 @@ class Penguin{
   }
 
   recieveVelocity(){
-    let velocity = Vector.create(shared[this.id][0], shared[this.id][1]);
+    let velocity = Vector.create(shared[this.id][0],shared[this.id][1]);
     Body.setVelocity(this.body, velocity);
   }
 
