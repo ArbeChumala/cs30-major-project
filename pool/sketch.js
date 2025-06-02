@@ -25,7 +25,10 @@ let ballsMovingVar = false;
 let isDrawnBack = false;
 let cueSpeedFactor = 20;
 let velocityRatio = 20;
-
+let stripedPlayerPlaying = true;
+let correctBallFallen = false;
+let cueBallFallen = false;
+let blackBallFallen = false;
 
 
 function setup() {
@@ -49,10 +52,32 @@ function draw() {
   let showCue = !ballsMoving();
   if (showCue) {
     cue.show();
-    cue.update(ballX, ballY);
+    ballOut();
   }
+  cue.update(ballX, ballY);
   for (let wall of walls) {
     wall.show();
+  }
+}
+
+function ballOut() {
+  for (let i = balls.length - 1; i > 0; i ++) {
+    theBall = balls[i];
+    if (theBall.x < width / 8 ||
+        theBall.x > 7 * width / 8 ||
+        theBall.y < height / 8 ||
+        theBall.y > 7 * height / 8) {
+      removedBall = balls.splice(i, 1);
+      if (removedBall.striped === stripedPlayerPlaying) {
+        correctBallFallen = true;
+      }
+      else if (removedBall.cue) {
+        cueBallFallen = true;
+      }
+      else if (removedBall.black) {
+        blackBallFallen = true;
+      }
+    }
   }
 }
 
@@ -100,10 +125,10 @@ function createBalls() {
 }
 
 function createBoundaries() {
-  let leftWall = new Wall(width / 8, height / 2, 10,  3 * height / 4);
-  let topWall = new Wall(width / 2, height / 8, 3 * width / 4, 10);
-  let rightWall = new Wall(7 * width / 8, height / 2, 10, 3 * height / 4);
-  let bottomWall = new Wall(width / 2, 7 * height / 8, 3 * width / 4, 10);
+  let leftWall = new Wall(width / 8, height / 2, 10,  3 * height / 5);
+  let topWall = new Wall(width / 2, height / 8, 3 * width / 4.5, 10);
+  let rightWall = new Wall(7 * width / 8, height / 2, 10, 3 * height / 5);
+  let bottomWall = new Wall(width / 2, 7 * height / 8, 3 * width / 4.5, 10);
   walls.push(leftWall);
   walls.push(rightWall);
   walls.push(topWall);
@@ -193,26 +218,13 @@ class Cue {
     this.justStoppedMoving = false;
   };
 
-  update(newBallY, newBallX) {
+  update(newBallX, newBallY) {
     this.ballY = newBallY;
     this.ballX = newBallX;
 
     this.distance = dist(this.x, this.y, this.ballX, this.ballY);
     this.strikeDistance = dist(this.strikeX, this.strikeY, this.ballX, this.ballY);
-    
 
-    //   this.x = this.ballX - 100 - radius;
-    //   this.y = this.ballY;
-    //   this.dx = 0;
-    //   this.dy = 0;
-
-    //   this.strikeX = newBallX;
-    //   this.strikeY = newBallY;
-    //   this.justStoppedMoving = true;
-    // }
-    // else if (this.justStoppedMoving) {
-      
-    // }
     if (this.movingIn) {
       this.x -= this.strikeRatio * this.distanceX / cueSpeedFactor;
       this.y -= this.strikeRatio * this.distanceY / cueSpeedFactor;
@@ -263,6 +275,12 @@ class Cue {
       this.distanceY = this.y - this.ballY;
 
       cueSpeedFactor = 2000 / this.strikeDistance;
+    }
+    else {
+      this.x = this.ballX - 100;
+      this.y = this.ballY;
+      this.strikeX = this.ballX;
+      this.strikeY = this.ballY;
     }
   }
 
