@@ -48,7 +48,6 @@ function draw() {
       ballY = ball.body.position.y;
     }
   }
-
   let showCue = !ballsMoving();
   if (showCue) {
     cue.show();
@@ -61,21 +60,36 @@ function draw() {
 }
 
 function ballOut() {
-  for (let i = balls.length - 1; i > 0; i ++) {
-    theBall = balls[i];
-    if (theBall.x < width / 8 ||
-        theBall.x > 7 * width / 8 ||
-        theBall.y < height / 8 ||
-        theBall.y > 7 * height / 8) {
-      removedBall = balls.splice(i, 1);
-      if (removedBall.striped === stripedPlayerPlaying) {
-        correctBallFallen = true;
-      }
-      else if (removedBall.cue) {
+
+  // checks if each ball is in the area
+  for (let i = balls.length - 1; i >= 0; i --) {
+    if (balls[i].x < width / 8 ||
+        balls[i].x > 7 * width / 8 ||
+        balls[i].y < height / 8 ||
+        balls[i].y > 7 * height / 8) {
+
+      // if the ball is the cue call, sets a variable to true and tries to move it back to the middle
+      if (balls[i].cueBall) {
         cueBallFallen = true;
+        balls[i].body.position.x = width / 4;
+        balls[i].body.position.y = height / 2;
+        balls[i].x = width / 4;
+        balls[i].y = height / 2;
       }
-      else if (removedBall.black) {
-        blackBallFallen = true;
+
+      // this stuff is irrelevant (hopefully) but it checks if it is striped, which eventually will
+      // be relevant for turns, if its the cue ball, and if its the 8 ball
+      else {
+        if (balls[i].striped === stripedPlayerPlaying) {
+          correctBallFallen = true;
+        }
+        if (balls[i].cueBall) {
+          cueBallFallen = true;
+        }
+        if (balls[i].eightBall) {
+          blackBallFallen = true;
+        }
+        balls.splice(i, 1);
       }
     }
   }
@@ -172,7 +186,8 @@ class Ball {
     let angle = this.body.angle;
     translate(pos.x, pos.y);
     rotate(angle);
-    
+    this.x = this.body.position.x;
+    this.y = this.body.position.y;
     fill(this.colour);
     circle(0, 0, 2 * radius);
     if (this.striped) {
