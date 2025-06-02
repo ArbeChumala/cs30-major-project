@@ -18,11 +18,13 @@ let penguins = [];
 let arrows = [];
 let squareWidth = 400;
 
+let intervalID;
+
 let hostStatus;
 
 let playersReady = 0;
 
-let shared = [];
+let shared = [[],[],[],[],[],[],[],[]];
 
 //constants
 const PENGUIN_RADIUS = 20;
@@ -38,22 +40,15 @@ function preload(){
     "main"
   );
   shared = partyLoadShared("shared");
-  partySetShared("shared", []);
+  partySetShared("shared", [[],[],[],[],[],[],[],[]]);
 
 }
 
 function setup(){
   createCanvas(windowWidth, windowHeight);
-
-  setupGame();
-
-  if(hostStatus === "guest"){
-    partySubscribe("hostIsReady", playerReady);
-  }
-  else{
-    partySubscribe("guestIsReady", playerReady);
-  }
   partySubscribe("setupGame", setupGame);
+  partySubscribe("playerReady", playerReady);
+  setupGame();
 }
 
 function setupGame(){
@@ -65,26 +60,41 @@ function setupGame(){
   hostStatus = partyIsHost() ? "host" : "guest";
 
   for(let i = 0; i<8; i++){
-    let x = i < 4 ? width/2 - 2*PENGUIN_RADIUS*(i%2) : width/2 + 2*PENGUIN_RADIUS*(i%2);
-    let y = i % 2 === 0 ? height/2 - squareWidth/4 : height/2 + squareWidth/4;
-    let colour = i%2 === 0 ? color(80, 150, 200) : color((10, 10, 10)) ;
-    let team = i%2 === 0 ? "host" : "guest";
-    let somePenguin = new Penguin(x, y, colour, team, i);
-    penguins.push(somePenguin);
+    if(i <4){
+      let x = width/2 - squareWidth*0.4 + i*squareWidth*0.27;
+      let y = height/2 - squareWidth*0.3;
+      let colour = color(80, 150, 200);
+      let team = "host";
+      let somePenguin = new Penguin(x, y, colour, team, i);
+      penguins.push(somePenguin);
+    }
+    else{
+      let x = width/2 - squareWidth*0.4 + (i-4)*squareWidth*0.27;
+      let y = height/2 + squareWidth*0.3;
+      let colour = color(10, 10, 10);
+      let team = "guest";
+      let somePenguin = new Penguin(x, y, colour, team, i);
+      penguins.push(somePenguin);
+    }
   }
-
 }
 
 function playerReady(){
   playersReady ++;
+  console.log(playersReady);
   if(playersReady === 2){
     for(let penguin of penguins){
       penguin.sendVelocity();
     }
-    for(let penguin of penguins){
-      penguin.recieveVelocity();
-    }
-    playersReady === 0;
+    intervalID = setInterval(recieveVelocities, 1000);
+    playersReady = 0;
+  }
+}
+
+function recieveVelocities(){
+  clearInterval(intervalID);
+  for(let penguin of penguins){
+    penguin.recieveVelocity();
   }
 }
 
@@ -129,12 +139,16 @@ function penguinsStationary(){
 
 function keyPressed(){
   if(key === "p"){
-    partyEmit(hostStatus + `IsReady`);
+    partyUnsubscribe("playerReady");
+    partyEmit("playerReady");
     playerReady();
+    partySubscribe("playerReady", playerReady);
   }
   if (key === "r"){
+    partyUnsubscribe("setupGame");
     partyEmit("setupGame");
     setupGame();
+    partySubscribe("setupGame", setupGame);
   }
 }
 
@@ -206,15 +220,14 @@ class Penguin{
     if(this.team === hostStatus){
       let dx = (this.arrow.x - this.arrow.penguinX)*0.05;
       let dy = (this.arrow.y - this.arrow.penguinY)*0.05;
-      let velocity = Vector.create(dx, dy);
   
-      shared[this.id] = velocity;
+      shared[this.id] = [dx, dy];
     }
   }
 
   recieveVelocity(){
-    console.log(shared[this.id]);
-    Body.setVelocity(this.body, shared[this.id]);
+    let velocity = Vector.create(shared[this.id][0],shared[this.id][1]);
+    Body.setVelocity(this.body, velocity);
   }
 
   isDying(){
