@@ -2,3 +2,4 @@
 - [Knockout](knockout)
 - [Pool](pool)
 - [Reversi](reversi)
+- [Tanks](tanks)
