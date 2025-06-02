@@ -31,17 +31,18 @@ let cueBallFallen = false;
 let blackBallFallen = false;
 
 
-function setup(){
+function setup() {
   createCanvas(windowWidth, windowHeight);
   createBalls();
   createBoundaries();
 }
 
-function draw(){
+function draw() {
   background(220);
   let ballX;
   let ballY;
-  for (let ball of balls){
+  for (let ball of balls) {
+    ball.update();
     ball.show();
     if (ball.cueBall) {
       ballX = ball.body.position.x;
@@ -54,38 +55,35 @@ function draw(){
     ballOut();
   }
   cue.update(ballX, ballY);
-  for (let wall of walls){
+  for (let wall of walls) {
     wall.show();
   }
 }
 
 function ballOut() {
   // checks if each ball is in the area
-  for (let i = balls.length - 1; i >= 0; i --){
+  for (let i = balls.length - 1; i >= 0; i --) {
     if (balls[i].x < width / 8 ||
         balls[i].x > 7 * width / 8 ||
         balls[i].y < height / 8 ||
         balls[i].y > 7 * height / 8) {
 
       // if the ball is the cue call, sets a variable to true and tries to move it back to the middle
-      if (balls[i].cueBall){
+      if (balls[i].cueBall) {
         cueBallFallen = true;
-        balls[i].body.position.x = width / 4;
-        balls[i].body.position.y = height / 2;
-        balls[i].x = width / 4;
-        balls[i].y = height / 2;
+        let homeBase = Vector.create(width/4, height/2);
+        Body.setPosition(balls[i].body, homeBase);
       }
 
       // this stuff is irrelevant (hopefully) but it checks if it is striped, which eventually will
       // be relevant for turns, if its the cue ball, and if its the 8 ball
       else {
-        if (balls[i].striped === stripedPlayerPlaying){
-          correctBallFallen = true;
+        if (balls[i].striped === stripedPlayerPlaying) {
         }
-        if (balls[i].cueBall){
+        if (balls[i].cueBall) {
           cueBallFallen = true;
         }
-        if (balls[i].eightBall){
+        if (balls[i].eightBall) {
           blackBallFallen = true;
         }
         balls.splice(i, 1);
@@ -94,21 +92,21 @@ function ballOut() {
   }
 }
 
-function ballsMoving(){
-  for (let ball of balls){
-    if (ball.isMoving()){
+function ballsMoving() {
+  for (let ball of balls) {
+    if (ball.isMoving()) {
       return true;
     }
   }
   return false;
 }
 
-function createBalls(){
+function createBalls() {
   let isStriped = true;
   let x = 2 * width / 3;
   let y = height / 2;
   let counter = [-1];
-  for (let n = 0; n < 5; n ++){
+  for (let n = 0; n < 5; n ++) {
     let lastCounter = counter.length - 1;
     counter.push(counter[lastCounter] + 1);
     lastCounter ++;
@@ -117,7 +115,7 @@ function createBalls(){
       lastCounter --;
     }
     let aBall;
-    for (let number of counter){
+    for (let number of counter) {
       let yModifier = number - counter[lastCounter] / 2;
       if (lastCounter === 2 && number === 1) {
         aBall = new Ball(x + lastCounter * 25 * 2**(1/2), y + yModifier * 30 * 2**(1/2), "black", false, true, false);
@@ -137,7 +135,7 @@ function createBalls(){
   balls.push(aBall);
 }
 
-function createBoundaries(){
+function createBoundaries() {
   let leftWall = new Wall(width / 8, height / 2, 10,  3 * height / 5);
   let topWall = new Wall(width / 2, height / 8, 3 * width / 4.5, 10);
   let rightWall = new Wall(7 * width / 8, height / 2, 10, 3 * height / 5);
@@ -157,14 +155,13 @@ function createBoundaries(){
 // ---------------------------------------------------------------------------------------------------------
 
 class Ball{
-  constructor(x, y, colour, striped, eightBall, cueBall){
+  constructor(x, y, colour, striped, eightBall, cueBall) {
     this.x = x;
     this.y = y;
     this.colour = colour;
     this.striped = striped;
     this.eightBall = eightBall;
     this.cueBall = cueBall;
-
     this.options = {
       restitution: 0.8,
       slop: 0.05,
@@ -173,20 +170,14 @@ class Ball{
 
     this.body = Bodies.circle(this.x, this.y, radius, this.options);
     Composite.add(world, this.body);
+
+    this.angle = this.body.angle;
   }
 
-  show(){
-    if (Math.abs(this.body.velocity.x) < 0.1 && Math.abs(this.body.velocity.y) < 0.1) {
-      let stationary = Vector.create(0, 0);
-      Body.setVelocity(this.body, stationary);
-    }
+  show() {
     push();
-    let pos = this.body.position;
-    let angle = this.body.angle;
-    translate(pos.x, pos.y);
-    rotate(angle);
-    this.x = this.body.position.x;
-    this.y = this.body.position.y;
+    translate(this.x, this.y);
+    rotate(this.angle);
     fill(this.colour);
     circle(0, 0, 2 * radius);
     if (this.striped) {
@@ -196,12 +187,23 @@ class Ball{
     pop();
   }
 
-  update(distanceX, distanceY){
+  update(){
+    if (Math.abs(this.body.velocity.x) < 0.1 && Math.abs(this.body.velocity.y) < 0.1) {
+      let stationary = Vector.create(0, 0);
+      Body.setVelocity(this.body, stationary);
+    }
+
+    this.x = this.body.position.x;
+    this.y = this.body.position.y;
+    this.angle = this.body.angle;
+  }
+
+  changeVelocity(distanceX, distanceY) {
     this.velocity = Vector.create(distanceX, distanceY);
     Body.setVelocity(this.body, this.velocity);
   }
 
-  isMoving(){
+  isMoving() {
     if (this.body.velocity.x === 0 && this.body.velocity.y === 0) {
       return false;
     }
@@ -210,7 +212,7 @@ class Ball{
 }
 
 class Cue{
-  constructor(ballX, ballY){
+  constructor(ballX, ballY) {
     this.ballX = ballX;
     this.ballY = ballY;
 
@@ -232,7 +234,7 @@ class Cue{
     this.justStoppedMoving = false;
   };
 
-  update(newBallX, newBallY){
+  update(newBallX, newBallY) {
     this.ballY = newBallY;
     this.ballX = newBallX;
 
@@ -246,16 +248,16 @@ class Cue{
       this.strikeX -= this.strikeRatio * this.distanceX / cueSpeedFactor;
       this.strikeY -= this.strikeRatio * this.distanceY / cueSpeedFactor;
 
-      if (this.distance < 100 + radius){
+      if (this.distance < 100 + radius) {
         this.movingIn = false;
-        for (let ball of balls){
+        for (let ball of balls) {
           if (ball.cueBall) {
-            ball.update(- this.distanceX / velocityRatio, - this.distanceY / velocityRatio);
+            ball.changeVelocity(- this.distanceX / velocityRatio, - this.distanceY / velocityRatio);
           }
         }
       }
     }
-    else if (mouseIsPressed && mouseX < this.x + 25 && mouseX > this.x - 25 && mouseY > this.y - 25 && mouseY < this.y + 25 &&this.distance >= 50){
+    else if (mouseIsPressed && mouseX < this.x + 25 && mouseX > this.x - 25 && mouseY > this.y - 25 && mouseY < this.y + 25 &&this.distance >= 50) {
       this.ratio = 100 /this.distance;
       this.strikeRatio = 100 / this.strikeDistance;
       
@@ -271,7 +273,7 @@ class Cue{
       this.isDrawnBack = true;
       this.movingIn = false;
     }
-    else if (this.isDrawnBack &&this.distance <= 100 + radius){
+    else if (this.isDrawnBack &&this.distance <= 100 + radius) {
       this.isDrawnBack = false;
 
       this.x = this.ballX - 100 - radius;
@@ -279,7 +281,7 @@ class Cue{
       this.strikeX = this.ballX;
       this.strikeY = this.ballY;
     }
-    else if (this.isDrawnBack && !mouseIsPressed){
+    else if (this.isDrawnBack && !mouseIsPressed) {
       this.dx ++;
       this.dy ++;
       this.movingIn = true;
@@ -298,7 +300,7 @@ class Cue{
     }
   }
 
-  show(){
+  show() {
     fill("black");
     stroke(4);
     line(this.x, this.y, this.strikeX, this.strikeY);
@@ -307,7 +309,7 @@ class Cue{
 }
 
 class Wall{
-  constructor(x, y, w, h){
+  constructor(x, y, w, h) {
     this.x = x;
     this.y = y;
     this.w = w;
@@ -327,7 +329,7 @@ class Wall{
     Composite.add(world, this.body);
   }
 
-  show(){
+  show() {
     push();
     fill("blue");
     quad(this.x1, this.y1, this.x1, this.y2, this.x2, this.y2, this.x2, this.y1);
