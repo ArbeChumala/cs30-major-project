@@ -16,7 +16,7 @@ engine.gravity.y=0;
 // penguin arrays
 let penguins = [];
 let arrows = [];
-let squareWidth = 600;
+let squareWidth = 400;
 
 let hostStatus;
 
@@ -40,13 +40,32 @@ function preload(){
   shared = partyLoadShared("shared");
   partySetShared("shared", []);
 
-  hostStatus = partyIsHost() ? "host" : "guest";
 }
 
 function setup(){
   createCanvas(windowWidth, windowHeight);
+
+  setupGame();
+
+  if(hostStatus === "guest"){
+    partySubscribe("hostIsReady", playerReady);
+  }
+  else{
+    partySubscribe("guestIsReady", playerReady);
+  }
+  partySubscribe("setupGame", setupGame);
+}
+
+function setupGame(){
+  Composite.clear(world);
+  penguins = [];
+  arrows = [];
+  playersReady = 0;
+
+  hostStatus = partyIsHost() ? "host" : "guest";
+
   for(let i = 0; i<8; i++){
-    let x = i < 4 ? width/2 - PENGUIN_RADIUS*(i%2 + 10) : width/2 + PENGUIN_RADIUS*(i%2 + 10);
+    let x = i < 4 ? width/2 - 2*PENGUIN_RADIUS*(i%2) : width/2 + 2*PENGUIN_RADIUS*(i%2);
     let y = i % 2 === 0 ? height/2 - squareWidth/4 : height/2 + squareWidth/4;
     let colour = i%2 === 0 ? color(80, 150, 200) : color((10, 10, 10)) ;
     let team = i%2 === 0 ? "host" : "guest";
@@ -54,7 +73,6 @@ function setup(){
     penguins.push(somePenguin);
   }
 
-  partySubscribe("playerReady", playerReady);
 }
 
 function playerReady(){
@@ -80,6 +98,7 @@ function draw(){
     penguins[i].show();
 
     if(penguins[i].isDead()){
+      Composite.remove(world, penguins[i].body);
       penguins.splice(i, 1);
     }
   }
@@ -110,8 +129,12 @@ function penguinsStationary(){
 
 function keyPressed(){
   if(key === "p"){
-    partyEmit("playerIsReady");
+    partyEmit(hostStatus + `IsReady`);
     playerReady();
+  }
+  if (key === "r"){
+    partyEmit("setupGame");
+    setupGame();
   }
 }
 
@@ -190,6 +213,7 @@ class Penguin{
   }
 
   recieveVelocity(){
+    console.log(shared[this.id]);
     Body.setVelocity(this.body, shared[this.id]);
   }
 
