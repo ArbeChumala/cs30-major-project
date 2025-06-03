@@ -21,6 +21,8 @@ function generateEmptyGrid(){
 }
 
 function generateColourSequence(){
+  let theSequence = "";
+
   for(let i = 0; i<GAME_WIDTH*GAME_HEIGHT; i++){
     theSequence += str(Math.round(random(6)));
   }
@@ -33,11 +35,8 @@ function preload(){
     "our-amazing-filler-game", 
     "main"
   );
-  if(partyIsHost()){
-    colourSequence = generateColourSequence();
-    partySetShared("colourSequence", colourSequence);
-  }
-  colourSequence = partyLoadShared("colourSequence");
+  tempSequence = generateColourSequence();
+  colourSequence = partyLoadShared("shared", {colourSequence: tempSequence});
 }
 
 function setup(){
