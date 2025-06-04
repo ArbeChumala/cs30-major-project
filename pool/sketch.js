@@ -29,62 +29,106 @@ let stripedPlayerPlaying = true;
 let correctBallFallen = false;
 let cueBallFallen = false;
 let blackBallFallen = false;
-
+let ballsJustMoving = false;
+let currentMilis;
+let gapMilis = 500;
+let stripedPlayerBalls;
+let nonStripedPlayerBalls;
+let playerHasWon = false;
 
 function setup() {
+  createGame();
+}
+
+function draw() {
+  background(220);
+  if (playerHasWon) {
+    showWinningPlayer(stripedPlayerPlaying);
+  }
+  else {
+    let ballX;
+    let ballY;
+    for (let ball of balls) {
+      ball.update();
+      ball.show();
+      if (ball.cueBall) {
+        ballX = ball.body.position.x;
+        ballY = ball.body.position.y;
+      }
+    }
+    let showCue = !ballsMoving();
+    ballsJustStoppedMoving();
+    if (showCue) {
+      cue.show();
+    }
+    cue.update(ballX, ballY);
+    for (let wall of walls) {
+      wall.show();
+    }
+  }
+}
+
+function createGame() {
   createCanvas(windowWidth, windowHeight);
   createBalls();
   createBoundaries();
 }
 
-function draw() {
-  background(220);
-  let ballX;
-  let ballY;
-  for (let ball of balls) {
-    ball.update();
-    ball.show();
-    if (ball.cueBall) {
-      ballX = ball.body.position.x;
-      ballY = ball.body.position.y;
-    }
+function showWinningPlayer(player) {
+  if (player === stripedPlayerPlaying && stripedPlayerBalls === 0 || player === !stripedPlayerPlaying && nonStripedPlayerBalls === 0) {
+    text("Did the striped player win the game? " + player + "!!!");
   }
-  let showCue = !ballsMoving();
-  if (showCue) {
-    cue.show();
-    ballOut();
+  else {
+    text("Did the striped player lose? " + player + "!!!");
   }
-  cue.update(ballX, ballY);
-  for (let wall of walls) {
-    wall.show();
+  if (currentMilis + gapMilis < millis()) {
+    createGame();
+    playerHasWon = false;
   }
 }
 
+function ballsJustStoppedMoving() {
+  if (!ballsMoving() && ballsJustMoving) {
+    ballOut();
+  }
+  ballsJustMoving = ballsMoving();
+}
+
 function ballOut() {
+  console.log("working");
   // checks if each ball is in the area
+  let samePlayerAgain = false;
   for (let i = balls.length - 1; i >= 0; i --) {
+    console.log("looping");
     if (balls[i].x < width / 8 ||
         balls[i].x > 7 * width / 8 ||
         balls[i].y < height / 8 ||
         balls[i].y > 7 * height / 8) {
 
-      // if the ball is the cue call, sets a variable to true and tries to move it back to the middle
+      // if the ball is the cue call, sets a variable to true and tries to move it back to the middle, as well as switching the player
+      // playing if it fell (works because it is always the last ball in the array)
       if (balls[i].cueBall) {
         cueBallFallen = true;
         let homeBase = Vector.create(width/4, height/2);
         Body.setPosition(balls[i].body, homeBase);
+        samePlayerAgain = false;
       }
 
       // this stuff is irrelevant (hopefully) but it checks if it is striped, which eventually will
       // be relevant for turns, if its the cue ball, and if its the 8 ball
       else {
-        if (balls[i].striped === stripedPlayerPlaying) {
-        }
-        if (balls[i].cueBall) {
-          cueBallFallen = true;
+        if (!balls[i].striped === stripedPlayerPlaying) {
+          samePlayerAgain = true;
         }
         if (balls[i].eightBall) {
-          blackBallFallen = true;
+          currentMilis = millis();
+          playerHasWon = true;
+        }
+        else if (balls[i].striped) {
+          stripedPlayerBalls --;
+        }
+        else {
+          nonStripedPlayerBalls --;
         }
         balls.splice(i, 1);
       }
@@ -102,6 +146,9 @@ function ballsMoving() {
 }
 
 function createBalls() {
+  stripedPlayerBalls = 7;
+  nonStripedPlayerBalls = 7;
+  balls = [];
   let isStriped = true;
   let x = 2 * width / 3;
   let y = height / 2;
@@ -136,10 +183,11 @@ function createBalls() {
 }
 
 function createBoundaries() {
-  let leftWall = new Wall(width / 8, height / 2, 10,  3 * height / 5);
-  let topWall = new Wall(width / 2, height / 8, 3 * width / 4.5, 10);
-  let rightWall = new Wall(7 * width / 8, height / 2, 10, 3 * height / 5);
-  let bottomWall = new Wall(width / 2, 7 * height / 8, 3 * width / 4.5, 10);
+  walls = [];
+  let leftWall = new Wall(width / 8, height / 2, 30,  3 * height / 5);
+  let topWall = new Wall(width / 2, height / 8, 3 * width / 4.5, 30);
+  let rightWall = new Wall(7 * width / 8, height / 2, 30, 3 * height / 5);
+  let bottomWall = new Wall(width / 2, 7 * height / 8, 3 * width / 4.5, 30);
   walls.push(leftWall);
   walls.push(rightWall);
   walls.push(topWall);
