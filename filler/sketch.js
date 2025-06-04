@@ -1,6 +1,8 @@
 let grid;
 let checkedSpaces = [];
 
+let playerMovesInterval;
+
 let colourArray = ["#F54E29", "#F89012", "#F7B926", "#90BE6D", "#43AA8B", "#577590"];
 let shared;
 
@@ -95,9 +97,11 @@ function draw(){
 
 function keyPressed(){
   if(shared.currentPlayer === yourPlayer){
+    partyUnsubscribe("play");
     partyEmit("play");
+    partySubscribe("play", playerMoves);
     shared.desiredColour = int(key);
-    playerMoves();
+    playerMovesInterval = setInterval(playerMoves, 500);
   }
 }
 
@@ -106,6 +110,8 @@ function toggleCurrentPlayer(){
 }
 
 function playerMoves(){
+  clearInterval(playerMovesInterval);
+  console.log(shared.desiredColour);
   if(shared.currentPlayer === PLAYER_ONE){
     changeBoxes(0, GAME_HEIGHT-1);
     checkedSpaces = [];
