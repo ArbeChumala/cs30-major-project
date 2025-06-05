@@ -32,6 +32,7 @@ function preload(){
       "our-amazing-filler-game", 
       room
     );
+    removeElements();
     tempSequence = generateColourSequence();
     shared = partyLoadShared(
       "shared", 
@@ -95,7 +96,9 @@ function setup(){
 //-----------------------------------------------------------------------------------------------
 
 function draw(){
-  background("black");
+  background(120);
+  stroke(255);
+  strokeWeight(3);
   if(room){
     for(let iy = 0; iy<GAME_HEIGHT; iy++){
       for(let ix = 0; ix<GAME_WIDTH; ix++){
