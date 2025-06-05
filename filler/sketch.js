@@ -1,3 +1,9 @@
+const room = new URLSearchParams(location.search).get("room");
+
+if (room) {
+  document.getElementById("room").value = room;
+}
+
 let grid;
 let checkedSpaces = [];
 
@@ -14,6 +20,28 @@ const PLAYER_ONE = -1;
 const PLAYER_TWO = -2;
 
 let yourPlayer;
+
+//-----------------------------------------------------------------------------------------------
+//setup functions
+//-----------------------------------------------------------------------------------------------
+
+function preload(){
+  if(room){
+    partyConnect(
+      "wss://demoserver.p5party.org", 
+      "our-amazing-filler-game", 
+      room
+    );
+    tempSequence = generateColourSequence();
+    shared = partyLoadShared(
+      "shared", 
+      {
+        colourSequence: tempSequence,
+        currentPlayer: PLAYER_ONE,
+      }
+    );
+  }
+}
 
 function generateEmptyGrid(){
   let newGrid = [];
@@ -50,56 +78,58 @@ function setupGrid(){
   return myGrid;
 }
 
-function preload(){
-  partyConnect(
-    "wss://demoserver.p5party.org", 
-    "our-amazing-filler-game", 
-    "main"
-  );
-  tempSequence = generateColourSequence();
-  shared = partyLoadShared(
-    "shared", 
-    {
-      colourSequence: tempSequence,
-      currentPlayer: PLAYER_ONE,
-    }
-  );
+function setup(){
+  if(room){
+    createCanvas(windowWidth, windowHeight);
+    yourPlayer = partyIsHost() ? PLAYER_ONE : PLAYER_TWO;
+    grid = setupGrid();
+    partySubscribe("play", playerMoves);
+  }
+  else{
+    noCanvas();
+  }
 }
 
-function setup(){
-  createCanvas(windowWidth, windowHeight);
-  yourPlayer = partyIsHost() ? PLAYER_ONE : PLAYER_TWO;
-  grid = setupGrid();
-  partySubscribe("play", playerMoves);
-}
+//-----------------------------------------------------------------------------------------------
+// automatic and player-input functions
+//-----------------------------------------------------------------------------------------------
 
 function draw(){
-  for(let iy = 0; iy<GAME_HEIGHT; iy++){
-    for(let ix = 0; ix<GAME_WIDTH; ix++){
-      let x = (width - SQUARE_DIMENSIONS*GAME_WIDTH)/2 + SQUARE_DIMENSIONS*ix;
-      let y = (height - SQUARE_DIMENSIONS*GAME_HEIGHT)/2 + SQUARE_DIMENSIONS*iy;
-
-      if(grid[iy][ix] === PLAYER_ONE){
-        fill("black");
+  background("black");
+  if(room){
+    for(let iy = 0; iy<GAME_HEIGHT; iy++){
+      for(let ix = 0; ix<GAME_WIDTH; ix++){
+        let x = (width - SQUARE_DIMENSIONS*GAME_WIDTH)/2 + SQUARE_DIMENSIONS*ix;
+        let y = (height - SQUARE_DIMENSIONS*GAME_HEIGHT)/2 + SQUARE_DIMENSIONS*iy;
+  
+        if(grid[iy][ix] === PLAYER_ONE){
+          fill("black");
+        }
+        else if(grid[iy][ix] === PLAYER_TWO){
+          fill("white");
+        }
+        else{
+          fill(colourArray[grid[iy][ix]]);
+        }
+  
+        square(x, y, SQUARE_DIMENSIONS);
       }
-      else if(grid[iy][ix] === PLAYER_TWO){
-        fill("white");
-      }
-      else{
-        fill(colourArray[grid[iy][ix]]);
-      }
-
-      square(x, y, SQUARE_DIMENSIONS);
     }
   }
 }
 
 function keyPressed(){
-  if(shared.currentPlayer === yourPlayer){
-    theColour = int(key);
-    partyEmit("play", {colour: theColour});
+  if(room){
+    if(shared.currentPlayer === yourPlayer){
+      theColour = int(key);
+      partyEmit("play", {colour: theColour});
+    }
   }
 }
+
+//-----------------------------------------------------------------------------------------------
+//functions that are not triggered by draw or player input
+//-----------------------------------------------------------------------------------------------
 
 function toggleCurrentPlayer(){
   shared.currentPlayer = shared.currentPlayer === PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
