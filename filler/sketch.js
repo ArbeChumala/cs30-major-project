@@ -1,10 +1,10 @@
 let grid;
 let checkedSpaces = [];
 
-let playerMovesInterval;
-
 let colourArray = ["#F54E29", "#F89012", "#F7B926", "#90BE6D", "#43AA8B", "#577590"];
 let shared;
+
+let desiredColour;
 
 const SQUARE_DIMENSIONS = 75;
 const GAME_WIDTH= 8;
@@ -61,7 +61,6 @@ function preload(){
     "shared", 
     {
       colourSequence: tempSequence,
-      desiredColour: 0,
       currentPlayer: PLAYER_ONE,
     }
   );
@@ -97,11 +96,8 @@ function draw(){
 
 function keyPressed(){
   if(shared.currentPlayer === yourPlayer){
-    partyUnsubscribe("play");
-    partyEmit("play");
-    partySubscribe("play", playerMoves);
-    shared.desiredColour = int(key);
-    playerMovesInterval = setInterval(playerMoves, 500);
+    theColour = int(key);
+    partyEmit("play", {colour: theColour});
   }
 }
 
@@ -109,9 +105,8 @@ function toggleCurrentPlayer(){
   shared.currentPlayer = shared.currentPlayer === PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
 }
 
-function playerMoves(){
-  clearInterval(playerMovesInterval);
-  console.log(shared.desiredColour);
+function playerMoves(object){
+  desiredColour = object.colour;
   if(shared.currentPlayer === PLAYER_ONE){
     changeBoxes(0, GAME_HEIGHT-1);
     checkedSpaces = [];
@@ -129,7 +124,7 @@ function changeBoxes(x, y){
       checkedSpaces.push(`${x}${y}`);
       changeNeighbours(x, y);
     }
-    else if (grid[y][x] === shared.desiredColour){
+    else if (grid[y][x] === desiredColour){
       checkedSpaces.push(`${x}${y}`);
       grid[y][x] = shared.currentPlayer;
       changeNeighbours(x, y);
