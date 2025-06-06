@@ -10,8 +10,11 @@ let bulletExists = false;
 let windSpeed;
 
 let collidingBodies = [];
+let wall;
 
-const {Engine, Render, Runner, Vector, Body, Bodies, Composite} = Matter;
+const {Detector, Engine, Render, Runner, Vector, Body, Bodies, Composite} = Matter;
+
+let detector = Detector.create();
 
 let engine = Engine.create();
 let world = engine.world;
@@ -19,21 +22,27 @@ let runner = Runner.create();
 Runner.run(runner, engine);
 
 function setup(){
+  rectMode(CENTER);
   createCanvas(windowWidth, windowHeight);
+
+  wall = new CollisionZone(width, height/2, 100, height);
+
+  flyingBullet = new Bullet(width/2, height/2, "arbe", PI/3, 20);
+  flyingBullet.launch();
+  bulletExists = true;
+
   windSpeed = 0;
+  Detector.setBodies(detector, collidingBodies);
 }
 
 function draw(){
   background(220);
-  if(bulletExists){
-    flyingBullet.show();
-  }
+  flyingBullet.show();
+  wall.show();
 }
 
 function mousePressed(){
-  flyingBullet = new Bullet(mouseX, mouseY, "arbe", PI/3, 20);
-  flyingBullet.launch();
-  bulletExists = true;
+  console.log(detector);
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -102,5 +111,10 @@ class CollisionZone{
 
     Composite.add(world, this.body);
     collidingBodies.push(this.body);
+  }
+
+  show(){
+    fill(0);
+    rect(this.x, this.y, this.w, this.h);
   }
 }
