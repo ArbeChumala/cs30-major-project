@@ -8,6 +8,9 @@
 // module aliases
 const {Engine, Render, Runner, Vector, Body, Bodies, Composite} = Matter;
 
+let myRoom;
+let userInput;
+
 // create an engine
 let engine = Engine.create();
 let world = engine.world;
@@ -17,8 +20,6 @@ engine.gravity.y=0;
 let penguins = [];
 let arrows = [];
 let squareWidth = 400;
-
-let intervalID;
 
 let hostStatus;
 
@@ -38,59 +39,67 @@ Runner.run(runner, engine);
 //-----------------------------------------------------------------------------------------------
 
 function preload(){
-  partyConnect(
-    "wss://demoserver.p5party.org", 
-    "our-amazing-knockout-game", 
-    "main"
-  );
-  shared = partyLoadShared("shared");
-  partySetShared("shared", [[],[],[],[],[],[],[],[]]);
-
+  poppins = loadFont("assets/fonts/bold-poppins.ttf");
 }
 
 function setup(){
+  noLoop();
   createCanvas(windowWidth, windowHeight);
-  partySubscribe("setupGame", setupGame);
-  partySubscribe("playerReady", playerReady);
-  setupGame();
+  userInput = createInput('main');
+  userInput.center();
+  background("#43AA8B");
+  textSize(100);
+  textAlign(CENTER);
+  textFont(poppins);
+  fill(255);
+  text("Join Room", width/2, height/2 - 100);
 }
 
 function draw(){
-  background(150, 200, 255);
-  rectMode(CENTER);
-  noStroke();
-  square(width/2, height/2, squareWidth);
-
-  for(i = penguins.length - 1; i>=0; i--){
-    penguins[i].show();
-
-    if(penguins[i].isDead()){
-      Composite.remove(world, penguins[i].body);
-      penguins.splice(i, 1);
+  if(myRoom){
+    background(150, 200, 255);
+    rectMode(CENTER);
+    noStroke();
+    square(width/2, height/2, squareWidth);
+  
+    for(i = penguins.length - 1; i>=0; i--){
+      penguins[i].show();
+  
+      if(penguins[i].isDead()){
+        Composite.remove(world, penguins[i].body);
+        penguins.splice(i, 1);
+      }
     }
   }
 }
 
 function mousePressed(){
-  for(let arrow of arrows){
-    arrow.activity = arrow.isActive();
+  if(myRoom){
+    for(let arrow of arrows){
+      arrow.activity = arrow.isActive();
+    }
   }
 }
 
 function mouseReleased(){
-  for(let arrow of arrows){
-    arrow.activity = false;
+  if(myRoom){
+    for(let arrow of arrows){
+      arrow.activity = false;
+    }
   }
 }
 
 function keyPressed(){
-  if(key === "p"){
+  if(!myRoom && key === "Enter"){
+    startParty();
+  }
+  else if(myRoom && key === "p"){
     partyUnsubscribe("playerReady");
     partyEmit("playerReady");
     playerReady();
     partySubscribe("playerReady", playerReady);
   }
-  if (key === "r"){
+  else if (myRoom && key === "r"){
     partyUnsubscribe("setupGame");
     partyEmit("setupGame");
     setupGame();
@@ -101,6 +110,19 @@ function keyPressed(){
 //-----------------------------------------------------------------------------------------------
 //functions called by other functions
 //-----------------------------------------------------------------------------------------------
+function startParty(){
+  myRoom = userInput.value();
+  partyConnect(
+    "wss://demoserver.p5party.org", 
+    "our-amazing-knockout-game", 
+    "main"
+  );
+  
+  partySubscribe("setupGame", setupGame);
+  partySubscribe("playerReady", playerReady);
+
+  shared = partyLoadShared("shared",[[],[],[],[],[],[],[],[]], setupGame);
+}
 
 function setupGame(){
   Composite.clear(world);
@@ -128,6 +150,9 @@ function setupGame(){
       penguins.push(somePenguin);
     }
   }
+
+  removeElements();
+  loop();
 }
 
 function playerReady(){
@@ -137,13 +162,12 @@ function playerReady(){
     for(let penguin of penguins){
       penguin.sendVelocity();
     }
-    intervalID = setInterval(recieveVelocities, 1000);
     playersReady = 0;
+    setTimeout(recieveVelocities, 1000);
   }
 }
 
 function recieveVelocities(){
-  clearInterval(intervalID);
   for(let penguin of penguins){
     penguin.recieveVelocity();
   }
