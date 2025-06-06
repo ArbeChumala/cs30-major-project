@@ -63,36 +63,41 @@ let startingMouseX;
 let startingMouseY;
 let gridUnit;
 
+//html room
+let userInput;
+let myRoom;
+
+let poppins;
+
+//-----------------------------------------------------------------------------------------------
+// functions called by p5 and events
+//-----------------------------------------------------------------------------------------------
+
 function preload(){
   board = loadImage("assets/board.png");
   blackTile = loadImage("assets/black-tile.png");
   whiteTile = loadImage("assets/white-tile.png");
   whiteGhostTile = loadImage("assets/ghost-white-tile.png");
   blackGhostTile = loadImage("assets/ghost-black-tile.png");
-  gameFont = loadFont("assets/gamefont.otf");
+  gameFont = loadFont("assets/fonts/gamefont.otf");
+  poppins = loadFont("assets/fonts/bold-poppins.ttf");
   jazzMusic = loadSound("assets/jazz-music.mp3");
   for (let i = 0; i<=12; i++){
     animationFrameArray.push(loadImage(`assets/animation-frames/${i}.png`));
   }
-  
-  partyConnect("wss://demoserver.p5party.org", "our-amazing-reversi-game", "main");
-  shared = partyLoadShared("shared");
-  partySetShared("shared", {playerX: undefined, playerY: undefined});
 }
 
 function setup(){
+  noLoop();
   setupCanvas();
-  toggleCurrentPlayer();
 
-  //setting visual parameters
-  imageMode(CENTER);
-  textAlign(CENTER);
-  textFont(gameFont);
-  textSize(40);
+  userInput = createInput('main');
+  userInput.center();
+  background("#43AA8B");
+  textSize(100);
+  textFont(poppins);
   fill(255);
-
-  partySubscribe("resetGame", resetGame);
-  partyWatchShared(shared, playerMoves, true);
+  text("Join Room", width/2, height/2 - 100);
 }
 
 function windowResized(){
@@ -100,10 +105,101 @@ function windowResized(){
   setupCanvas();
 }
 
+function draw(){
+  if(myRoom){
+    background(27, 117, 92);
+    startBotTimer();
+    setCursor();
+    displayGrid();
+    displayScore();
+    displayWinScreen();
+  }
+}
+
+function keyPressed(){
+  if(myRoom){
+    //switches the mode
+    if (key === "p" && mode === "pvb"){
+      resetGame();
+      mode = "pvp";
+    }
+    else if (key === "b" && mode === "pvp"){
+      resetGame();
+      mode = "pvb";
+    }
+    else if (key === "r"){
+      partyEmit("resetGame");
+      resetGame();
+    }
+  }
+  else{
+    if(key === "Enter"){
+      startParty();
+    }
+  }
+}
+
+function mousePressed(){
+  if(myRoom){
+    //plays music on first click
+    if (!jazzMusic.isPlaying()){
+      jazzMusic.loop();
+    }
+  
+    //finds the x and y coordinates (with respect to the grid cells) of the mouse
+    let playerX = Math.floor((mouseX-startingMouseX)/gridUnit);
+    let playerY = Math.floor((mouseY-startingMouseY)/gridUnit);
+  
+    //either the mode is pvp and either colour can play by clicking, or it is against the bot and only black can play by clicking
+    if(mode === "pvp" && (currentPlayer === BLACK && partyIsHost() || currentPlayer === WHITE && !partyIsHost())){
+      if (playerX >=0 && playerX <GRID_DIMENSIONS && playerY >= 0 && playerY < GRID_DIMENSIONS){
+        shared.playerX = playerX;
+        shared.playerY = playerY;
+      }
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------------------------
+// functions called by other functions
+//-----------------------------------------------------------------------------------------------
+function startParty(){
+  myRoom = userInput.value();
+  partyConnect(
+    "wss://demoserver.p5party.org", 
+    "our-amazing-reversi-game", 
+    myRoom,
+  );
+
+  partySubscribe("resetGame", resetGame);
+  shared = partyLoadShared("shared", {playerX: undefined, playerY: undefined}, resetGame);
+}
+
+function resetGame(){
+  //resets the game board
+  partyWatchShared(shared, playerMoves, true);
+  grid = generateStartGrid();
+  drawingGrid = structuredClone(grid);
+  gameOver = false;
+  currentPlayer = WHITE;
+  updateTileCount();
+  toggleCurrentPlayer();
+
+  removeElements();
+  loop();
+}
+
 function setupCanvas(){
   //makes canvas again and continues noSmooth()
   createCanvas(windowWidth, windowHeight);
   noSmooth();
+
+  //image and text parameters
+  imageMode(CENTER);
+  textAlign(CENTER);
+  textFont(gameFont);
+  textSize(40);
+  fill(255);
 
   //reassigns variables based on canvas size
   resizingRatio = height/228;
@@ -114,15 +210,6 @@ function setupCanvas(){
   startingImageY = height/2 - 3.5*gridUnit;
   startingMouseX = startingImageX - 0.5*cellSize;
   startingMouseY = startingImageY - 0.5*cellSize;
-}
-
-function draw(){
-  background(27, 117, 92);
-  startBotTimer();
-  setCursor();
-  displayGrid();
-  displayScore();
-  displayWinScreen();
 }
 
 function generateEmptyGrid(){
@@ -497,48 +584,3 @@ function setCursor(){
   }
 }
 
-function mousePressed(){
-  //plays music on first click
-  if (!jazzMusic.isPlaying()){
-    jazzMusic.loop();
-  }
-
-  //finds the x and y coordinates (with respect to the grid cells) of the mouse
-  let playerX = Math.floor((mouseX-startingMouseX)/gridUnit);
-  let playerY = Math.floor((mouseY-startingMouseY)/gridUnit);
-
-  //either the mode is pvp and either colour can play by clicking, or it is against the bot and only black can play by clicking
-  if(mode === "pvp" && (currentPlayer === BLACK && partyIsHost() || currentPlayer === WHITE && !partyIsHost())){
-    if (playerX >=0 && playerX <GRID_DIMENSIONS && playerY >= 0 && playerY < GRID_DIMENSIONS){
-      shared.playerX = playerX;
-      shared.playerY = playerY;
-    }
-  }
-}
-
-
-function keyPressed(){
-  //switches the mode
-  if (key === "p" && mode === "pvb"){
-    resetGame();
-    mode = "pvp";
-  }
-  else if (key === "b" && mode === "pvp"){
-    resetGame();
-    mode = "pvb";
-  }
-  else if (key === "r"){
-    partyEmit("resetGame");
-    resetGame();
-  }
-}
-
-function resetGame(){
-  //resets the game board
-  grid = generateStartGrid();
-  drawingGrid = structuredClone(grid);
-  gameOver = false;
-  currentPlayer = WHITE;
-  updateTileCount();
-  toggleCurrentPlayer();
-}

@@ -115,7 +115,7 @@ function startParty(){
   partyConnect(
     "wss://demoserver.p5party.org", 
     "our-amazing-knockout-game", 
-    "main"
+    myRoom,
   );
   
   partySubscribe("setupGame", setupGame);
