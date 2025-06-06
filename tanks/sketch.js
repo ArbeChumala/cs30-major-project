@@ -12,9 +12,7 @@ let windSpeed;
 let collidingBodies = [];
 let wall;
 
-const {Detector, Engine, Render, Runner, Vector, Body, Bodies, Composite} = Matter;
-
-let detector = Detector.create();
+const {Detector, Engine, Render, Runner, Vector, Body, Bodies, Composite, Events} = Matter;
 
 let engine = Engine.create();
 let world = engine.world;
@@ -32,7 +30,8 @@ function setup(){
   bulletExists = true;
 
   windSpeed = 0;
-  Detector.setBodies(detector, collidingBodies);
+
+  Events.on(engine, "collisionStarted", turnsRed);
 }
 
 function draw(){
@@ -44,6 +43,16 @@ function draw(){
 function mousePressed(){
   console.log(detector);
 }
+
+function turnsRed(event) {
+  pair = event.pairs;
+  pair.bodyA.render.fillStyle = 'red';
+  pair.bodyB.render.fillStyle = 'red';
+}
+
+// ----------------------------------------------------------------------------------------------
+// Called by another function
+// ----------------------------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------------------------
 //classes
@@ -62,7 +71,6 @@ class Bullet{
 
     this.body = Bodies.circle(this.x, this.y, this.r);
     Composite.add(world, this.body);
-    collidingBodies.push(this.body);
 
     this.rotationAngle = this.body.angle;
   }
@@ -110,7 +118,6 @@ class CollisionZone{
     this.body = Bodies.rectangle(this.x, this.y, this.w, this.h, options);
 
     Composite.add(world, this.body);
-    collidingBodies.push(this.body);
   }
 
   show(){
