@@ -33,6 +33,10 @@ const PENGUIN_RADIUS = 20;
 let runner = Runner.create();
 Runner.run(runner, engine);
 
+//-----------------------------------------------------------------------------------------------
+//functions that are called by p5 or events
+//-----------------------------------------------------------------------------------------------
+
 function preload(){
   partyConnect(
     "wss://demoserver.p5party.org", 
@@ -50,6 +54,53 @@ function setup(){
   partySubscribe("playerReady", playerReady);
   setupGame();
 }
+
+function draw(){
+  background(150, 200, 255);
+  rectMode(CENTER);
+  noStroke();
+  square(width/2, height/2, squareWidth);
+
+  for(i = penguins.length - 1; i>=0; i--){
+    penguins[i].show();
+
+    if(penguins[i].isDead()){
+      Composite.remove(world, penguins[i].body);
+      penguins.splice(i, 1);
+    }
+  }
+}
+
+function mousePressed(){
+  for(let arrow of arrows){
+    arrow.activity = arrow.isActive();
+  }
+}
+
+function mouseReleased(){
+  for(let arrow of arrows){
+    arrow.activity = false;
+  }
+}
+
+function keyPressed(){
+  if(key === "p"){
+    partyUnsubscribe("playerReady");
+    partyEmit("playerReady");
+    playerReady();
+    partySubscribe("playerReady", playerReady);
+  }
+  if (key === "r"){
+    partyUnsubscribe("setupGame");
+    partyEmit("setupGame");
+    setupGame();
+    partySubscribe("setupGame", setupGame);
+  }
+}
+
+//-----------------------------------------------------------------------------------------------
+//functions called by other functions
+//-----------------------------------------------------------------------------------------------
 
 function setupGame(){
   Composite.clear(world);
@@ -98,34 +149,6 @@ function recieveVelocities(){
   }
 }
 
-function draw(){
-  background(150, 200, 255);
-  rectMode(CENTER);
-  noStroke();
-  square(width/2, height/2, squareWidth);
-
-  for(i = penguins.length - 1; i>=0; i--){
-    penguins[i].show();
-
-    if(penguins[i].isDead()){
-      Composite.remove(world, penguins[i].body);
-      penguins.splice(i, 1);
-    }
-  }
-}
-
-function mousePressed(){
-  for(let arrow of arrows){
-    arrow.activity = arrow.isActive();
-  }
-}
-
-function mouseReleased(){
-  for(let arrow of arrows){
-    arrow.activity = false;
-  }
-}
-
 function penguinsStationary(){
   let movingPenguinFound = false;
   for(let penguin of penguins){
@@ -136,25 +159,10 @@ function penguinsStationary(){
   return !movingPenguinFound;
 }
 
-
-function keyPressed(){
-  if(key === "p"){
-    partyUnsubscribe("playerReady");
-    partyEmit("playerReady");
-    playerReady();
-    partySubscribe("playerReady", playerReady);
-  }
-  if (key === "r"){
-    partyUnsubscribe("setupGame");
-    partyEmit("setupGame");
-    setupGame();
-    partySubscribe("setupGame", setupGame);
-  }
-}
-
 //-----------------------------------------------------------------------------------------------
 //classes
 //-----------------------------------------------------------------------------------------------
+
 class Penguin{
   constructor(x, y, colour, team, id){
     this.x = x;
