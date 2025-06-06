@@ -3,3 +3,4 @@
 - [Pool](pool)
 - [Reversi](reversi)
 - [Filler](filler)
+- [Tanks](tanks)
