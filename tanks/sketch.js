@@ -58,12 +58,10 @@ function turnsRed(event) {
 //classes
 //-----------------------------------------------------------------------------------------------
 class Bullet{
-  constructor(x, y, player, angle, power){
+  constructor(x, y, angle, power){
     this.x = x;
     this.y = y;
     this.r = 5;
-
-    this.player = player;
     this.colour = "red";
 
     this.inclinationAngle = angle;
