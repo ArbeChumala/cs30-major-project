@@ -1,8 +1,7 @@
-const room = new URLSearchParams(location.search).get("room");
+let myRoom = undefined;
+let userInput;
 
-if (room) {
-  document.getElementById("room").value = room;
-}
+let poppins;
 
 let grid;
 let checkedSpaces = [];
@@ -22,84 +21,31 @@ const PLAYER_TWO = -2;
 let yourPlayer;
 
 //-----------------------------------------------------------------------------------------------
-//setup functions
-//-----------------------------------------------------------------------------------------------
-
-function preload(){
-  if(room){
-    partyConnect(
-      "wss://demoserver.p5party.org", 
-      "our-amazing-filler-game", 
-      room
-    );
-    removeElements();
-    tempSequence = generateColourSequence();
-    shared = partyLoadShared(
-      "shared", 
-      {
-        colourSequence: tempSequence,
-        currentPlayer: PLAYER_ONE,
-      }
-    );
-  }
-}
-
-function generateEmptyGrid(){
-  let newGrid = [];
-  for(let y = 0; y<GAME_HEIGHT; y++){
-    newGrid.push([]);
-    for(let x = 0; x<GAME_WIDTH; x++){
-      newGrid[y].push(0);
-    }
-  }
-  return newGrid;
-}
-
-function generateColourSequence(){
-  let theSequence = "";
-
-  for(let i = 0; i<GAME_WIDTH*GAME_HEIGHT; i++){
-    theSequence += str(Math.round(random(colourArray.length-1)));
-  }
-  return theSequence;
-}
-
-function setupGrid(){
-  let myGrid = generateEmptyGrid();
-
-  for(let y = 0; y<GAME_HEIGHT; y++){
-    for(let x = 0; x<GAME_WIDTH; x++){
-      myGrid[y][x] = int(shared.colourSequence[GAME_WIDTH*y + x]);
-    }
-  }
-
-  myGrid[GAME_HEIGHT -1][0] = PLAYER_ONE;
-  myGrid[0][GAME_WIDTH-1] = PLAYER_TWO;
-
-  return myGrid;
-}
-
-function setup(){
-  if(room){
-    createCanvas(windowWidth, windowHeight);
-    yourPlayer = partyIsHost() ? PLAYER_ONE : PLAYER_TWO;
-    grid = setupGrid();
-    partySubscribe("play", playerMoves);
-  }
-  else{
-    noCanvas();
-  }
-}
-
-//-----------------------------------------------------------------------------------------------
 // automatic and player-input functions
 //-----------------------------------------------------------------------------------------------
 
-function draw(){
+function preload(){
+  poppins = loadFont("assets/fonts/bold-poppins.ttf");
+}
+
+function setup(){
+  noLoop();
+  createCanvas(windowWidth, windowHeight);
+  userInput = createInput('main');
+  userInput.center();
   background(120);
-  stroke(255);
-  strokeWeight(3);
-  if(room){
+  textSize(100);
+  textAlign(CENTER);
+  textFont(poppins);
+  fill(255);
+  text("Join Room", width/2, height/2 - 100);
+}
+
+function draw(){
+  if(myRoom){
+    background(120);
+    stroke(255);
+    strokeWeight(3);
     for(let iy = 0; iy<GAME_HEIGHT; iy++){
       for(let ix = 0; ix<GAME_WIDTH; ix++){
         let x = (width - SQUARE_DIMENSIONS*GAME_WIDTH)/2 + SQUARE_DIMENSIONS*ix;
@@ -122,17 +68,48 @@ function draw(){
 }
 
 function keyPressed(){
-  if(room){
-    if(shared.currentPlayer === yourPlayer){
-      theColour = int(key);
-      partyEmit("play", {colour: theColour});
-    }
+  if(myRoom && shared.currentPlayer === yourPlayer){
+    theColour = int(key);
+    partyEmit("play", {colour: theColour});
+  }
+  else if (key === "Enter" && !myRoom){
+    startParty();
+    
   }
 }
 
 //-----------------------------------------------------------------------------------------------
-//functions that are not triggered by draw or player input
+//functions that are solely triggered by other functions
 //-----------------------------------------------------------------------------------------------
+
+function startParty(){
+  myRoom = userInput.value();
+  partyConnect(
+    "wss://demoserver.p5party.org", 
+    "our-amazing-filler-game", 
+    myRoom
+  );
+
+  partySubscribe("play", playerMoves);
+
+  tempSequence = generateColourSequence();
+  
+  shared = partyLoadShared(
+    "shared", 
+    {
+      colourSequence: tempSequence,
+      currentPlayer: PLAYER_ONE,
+    },
+    setupGame,
+  );
+}
+
+function setupGame(){
+  yourPlayer = partyIsHost() ? PLAYER_ONE : PLAYER_TWO;
+  grid = setupGrid();
+  removeElements();
+  loop();
+}
 
 function toggleCurrentPlayer(){
   shared.currentPlayer = shared.currentPlayer === PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
@@ -170,4 +147,39 @@ function changeNeighbours(x, y){
   changeBoxes(x, y-1);
   changeBoxes(x+1, y);
   changeBoxes(x-1, y);
+}
+
+function generateEmptyGrid(){
+  let newGrid = [];
+  for(let y = 0; y<GAME_HEIGHT; y++){
+    newGrid.push([]);
+    for(let x = 0; x<GAME_WIDTH; x++){
+      newGrid[y].push(0);
+    }
+  }
+  return newGrid;
+}
+
+function generateColourSequence(){
+  let theSequence = "";
+
+  for(let i = 0; i<GAME_WIDTH*GAME_HEIGHT; i++){
+    theSequence += str(Math.round(random(colourArray.length-1)));
+  }
+  return theSequence;
+}
+
+function setupGrid(){
+  let myGrid = generateEmptyGrid();
+
+  for(let y = 0; y<GAME_HEIGHT; y++){
+    for(let x = 0; x<GAME_WIDTH; x++){
+      myGrid[y][x] = int(shared.colourSequence[GAME_WIDTH*y + x]);
+    }
+  }
+
+  myGrid[GAME_HEIGHT -1][0] = PLAYER_ONE;
+  myGrid[0][GAME_WIDTH-1] = PLAYER_TWO;
+
+  return myGrid;
 }
