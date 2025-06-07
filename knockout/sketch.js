@@ -161,8 +161,10 @@ function playerReady(){
   playersReady ++;
 
   if(playersReady === 2){
-    console.log("lets play");
-    guestSendVelocities();
+    if(!partyIsHost()){
+      partySetShared(shared, {velocities: [0, 0, 0, 0, 0, 0, 0, 0]});
+      guestSendVelocities();
+    }
     playersReady = 0;
   }
 }
@@ -343,7 +345,6 @@ class Arrow{
     //the penguins are just stopping
     else if (penguinsStationary() && !this.stationaryLastFrame){
       this.stationaryLastFrame = true;
-      
       this.x = this.chooseX();
       this.y = this.chooseY();
     }
