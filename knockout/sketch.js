@@ -123,6 +123,7 @@ function startParty(){
   partySubscribe("playerReady", playerReady);
   partySubscribe("recieveVelocities", recieveVelocities);
   partySubscribe("hostSendVelocities", hostSendVelocities);
+  partySubscribe("checkIfReady", checkIfReady);
 
   shared = partyLoadShared("shared",{velocities: [0, 0, 0, 0, 0, 0, 0, 0] }, setupGame);
 }
@@ -172,20 +173,20 @@ function playerReady(){
 function hostSendVelocities(){
   if(partyIsHost()){
     for(let penguin of penguins){
-      penguin.sendVelocity();
+      if(shared.velocities[penguin.id].length !== 2){
+        penguin.sendVelocity();
+      }
     }
+    partyEmit("checkIfReady");
   }
-
-  console.log("gonna check");
-  setTimeout(checkIfReady, 100);
 }
 
 function checkIfReady(){
   if(!partyIsHost()){
     let isReady = true;
 
-    for(let item of shared.velocities){
-      if (item.length !== 2){
+    for(let penguin of penguins){
+      if (shared.velocities[penguin.id].length !== 2){
         isReady = false;
       }
     }
