@@ -52,6 +52,7 @@ let gameFont;
 let board;
 let animationFrameArray = [];
 let jazzMusic;
+let poppins;
 
 //coordinates and image size shortcuts
 let resizingRatio;
@@ -66,8 +67,6 @@ let gridUnit;
 //html room
 let userInput;
 let myRoom;
-
-let poppins;
 
 //-----------------------------------------------------------------------------------------------
 // functions called by p5 and events

@@ -25,10 +25,14 @@ let hostStatus;
 
 let playersReady = 0;
 
-let shared = [[],[],[],[],[],[],[],[]];
+let poppins;
+let blackPenguinImg;
+let bluePenguinImg;
+
+let shared;
 
 //constants
-const PENGUIN_RADIUS = 20;
+const PENGUIN_RADIUS = 30;
 
 //engine runner
 let runner = Runner.create();
@@ -40,10 +44,13 @@ Runner.run(runner, engine);
 
 function preload(){
   poppins = loadFont("assets/fonts/bold-poppins.ttf");
+  blackPenguinImg = loadImage("assets/images/black-penguin.png");
+  bluePenguinImg = loadImage("assets/images/blue-penguin.png");
 }
 
 function setup(){
   noLoop();
+  imageMode(CENTER);
   createCanvas(windowWidth, windowHeight);
   userInput = createInput('main');
   userInput.center();
@@ -94,16 +101,10 @@ function keyPressed(){
     startParty();
   }
   else if(myRoom && key === "p"){
-    partyUnsubscribe("playerReady");
     partyEmit("playerReady");
-    playerReady();
-    partySubscribe("playerReady", playerReady);
   }
   else if (myRoom && key === "r"){
-    partyUnsubscribe("setupGame");
     partyEmit("setupGame");
-    setupGame();
-    partySubscribe("setupGame", setupGame);
   }
 }
 
@@ -120,8 +121,10 @@ function startParty(){
   
   partySubscribe("setupGame", setupGame);
   partySubscribe("playerReady", playerReady);
+  partySubscribe("recieveVelocities", recieveVelocities);
+  partySubscribe("hostSendVelocities", hostSendVelocities);
 
-  shared = partyLoadShared("shared",[[],[],[],[],[],[],[],[]], setupGame);
+  shared = partyLoadShared("shared",{velocities: [0, 0, 0, 0, 0, 0, 0, 0] }, setupGame);
 }
 
 function setupGame(){
@@ -132,21 +135,20 @@ function setupGame(){
 
   hostStatus = partyIsHost() ? "host" : "guest";
 
+
   for(let i = 0; i<8; i++){
     if(i <4){
       let x = width/2 - squareWidth*0.4 + i*squareWidth*0.27;
       let y = height/2 - squareWidth*0.3;
-      let colour = color(80, 150, 200);
       let team = "host";
-      let somePenguin = new Penguin(x, y, colour, team, i);
+      let somePenguin = new Penguin(x, y, team, i);
       penguins.push(somePenguin);
     }
     else{
       let x = width/2 - squareWidth*0.4 + (i-4)*squareWidth*0.27;
       let y = height/2 + squareWidth*0.3;
-      let colour = color(10, 10, 10);
       let team = "guest";
-      let somePenguin = new Penguin(x, y, colour, team, i);
+      let somePenguin = new Penguin(x, y, team, i);
       penguins.push(somePenguin);
     }
   }
@@ -157,13 +159,51 @@ function setupGame(){
 
 function playerReady(){
   playersReady ++;
-  console.log(playersReady);
+
   if(playersReady === 2){
+    console.log("lets play");
+    guestSendVelocities();
+    playersReady = 0;
+  }
+}
+
+function hostSendVelocities(){
+  if(partyIsHost()){
     for(let penguin of penguins){
       penguin.sendVelocity();
     }
-    playersReady = 0;
-    setTimeout(recieveVelocities, 1000);
+  }
+
+  console.log("gonna check");
+  setTimeout(checkIfReady, 100);
+}
+
+function checkIfReady(){
+  if(!partyIsHost()){
+    let isReady = true;
+
+    for(let item of shared.velocities){
+      if (item.length !== 2){
+        isReady = false;
+      }
+    }
+
+    if(isReady){
+      partyEmit("recieveVelocities");
+    }
+    else{
+      partyEmit("hostSendVelocities");
+    }
+  }
+}
+
+function guestSendVelocities(){
+  if(!partyIsHost()){
+    for(let penguin of penguins){
+      penguin.sendVelocity();
+    }
+    
+    partyEmit("hostSendVelocities");
   }
 }
 
@@ -188,17 +228,23 @@ function penguinsStationary(){
 //-----------------------------------------------------------------------------------------------
 
 class Penguin{
-  constructor(x, y, colour, team, id){
+  constructor(x, y, team, id){
     this.x = x;
     this.y = y;
     this.r = PENGUIN_RADIUS;
-    this.colour = colour;
     this.team = team;
     this.id = id;
     
     if(this.team === hostStatus){
       this.arrow = new Arrow(this.x, this.y, this.id);
       arrows.push(this.arrow);
+    }
+
+    if(this.team === "host"){
+      this.image = bluePenguinImg;
+    }
+    else{
+      this.image = blackPenguinImg;
     }
 
     let options = {
@@ -221,10 +267,8 @@ class Penguin{
     translate(this.x, this.y);
     rotate(this.angle);
 
-    fill(this.colour);
-    noStroke();
-
-    circle(0, 0, this.r * 2);
+    noSmooth();
+    image(this.image, 0, 0, this.r*2, this.r*2);
 
     pop();
   }
@@ -252,13 +296,13 @@ class Penguin{
     if(this.team === hostStatus){
       let dx = (this.arrow.x - this.arrow.penguinX)*0.05;
       let dy = (this.arrow.y - this.arrow.penguinY)*0.05;
-  
-      shared[this.id] = [dx, dy];
+
+      shared.velocities[this.id] = [dx, dy];
     }
   }
 
   recieveVelocity(){
-    let velocity = Vector.create(shared[this.id][0],shared[this.id][1]);
+    let velocity = Vector.create(shared.velocities[this.id][0],shared.velocities[this.id][1]);
     Body.setVelocity(this.body, velocity);
   }
 
