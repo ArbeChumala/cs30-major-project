@@ -150,7 +150,11 @@ function startParty(){
   partySubscribe("hostSendVelocities", hostSendVelocities);
   partySubscribe("checkIfReady", checkIfReady);
 
-  shared = partyLoadShared("shared",{velocities: [0, 0, 0, 0, 0, 0, 0, 0] }, setupGame);
+  shared = partyLoadShared("shared",
+    {
+      velocities: [0, 0, 0, 0, 0, 0, 0, 0],
+    }, 
+    setupGame);
 }
 
 function setupGame(){
@@ -160,7 +164,6 @@ function setupGame(){
   playersReady = 0;
 
   hostStatus = partyIsHost() ? "host" : "guest";
-
 
   for(let i = 0; i<8; i++){
     if(i <4){
@@ -300,9 +303,6 @@ class Penguin{
     image(this.image, 0, 0, this.r*2, this.r*2);
 
     pop();
-
-    
-
   }
 
   update(){

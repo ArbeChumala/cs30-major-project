@@ -44,8 +44,6 @@ function setup(){
 function draw(){
   if(myRoom){
     background(120);
-    stroke(255);
-    strokeWeight(3);
     for(let iy = 0; iy<GAME_HEIGHT; iy++){
       for(let ix = 0; ix<GAME_WIDTH; ix++){
         let x = (width - SQUARE_DIMENSIONS*GAME_WIDTH)/2 + SQUARE_DIMENSIONS*ix;
@@ -60,7 +58,7 @@ function draw(){
         else{
           fill(colourArray[grid[iy][ix]]);
         }
-  
+        noStroke();
         square(x, y, SQUARE_DIMENSIONS);
       }
     }
@@ -106,7 +104,7 @@ function startParty(){
 
 function setupGame(){
   yourPlayer = partyIsHost() ? PLAYER_ONE : PLAYER_TWO;
-  grid = setupGrid();
+  grid = setupGrid(shared.colourSequence, true);
   removeElements();
   loop();
 }
@@ -164,22 +162,76 @@ function generateColourSequence(){
   let theSequence = "";
 
   for(let i = 0; i<GAME_WIDTH*GAME_HEIGHT; i++){
-    theSequence += str(Math.round(random(colourArray.length-1)));
+    let pretendX = i%GAME_WIDTH;
+    let pretendY = Math.floor(i/GAME_WIDTH);
+
+    let isWarmColoured = (pretendX + pretendY)%2 === 0;
+
+    if(isWarmColoured){
+      theSequence += str(Math.round(random(0,2.5)));
+    }
+    else{
+      theSequence += str(Math.round(random(2.5,5)));
+    }
   }
+
   return theSequence;
 }
 
-function setupGrid(){
+// function demoTheSequence(theSequence){
+//   testingGrid = setupGrid(theSequence, false);
+//   newSequence = "";
+  
+//   for(let y = 0; y<GAME_HEIGHT; y++){
+//     for(let x = 0; x<GAME_WIDTH; x++){
+//       if(checkForTwins(testingGrid, x, y)){
+//         testingGrid[y][x] = colourArray.length-1;
+//         newSequence += str(colourArray.length-1);
+//       }
+//       else{
+//         newSequence += str(testingGrid[y][x]);
+//       }
+//     }
+//   }
+
+//   return newSequence;
+// }
+
+// function checkForTwins(myGrid, x, y){
+//   let matchesFound = 0;
+
+//   changes = [
+//     [x, y+1],
+//     [x, y-1],
+//     [x+1, y],
+//     [x-1, y]
+//   ];
+
+//   for(let change of changes){
+//     if( change[1] >=0 && change[1] < GAME_HEIGHT &&
+//         change[0] >=0 && change[0] < GAME_HEIGHT &&
+//         myGrid[change[1]][change[0]] !== colourArray.length-1 &&
+//         myGrid[y][x] === myGrid[change[1]][change[0]]){
+//       matchesFound ++;
+//     }
+//   }
+
+//   return matchesFound;
+// }
+
+function setupGrid(theSequence, isForReal){
   let myGrid = generateEmptyGrid();
 
   for(let y = 0; y<GAME_HEIGHT; y++){
     for(let x = 0; x<GAME_WIDTH; x++){
-      myGrid[y][x] = int(shared.colourSequence[GAME_WIDTH*y + x]);
+      myGrid[y][x] = int(theSequence[GAME_WIDTH*y + x]);
     }
   }
 
-  myGrid[GAME_HEIGHT -1][0] = PLAYER_ONE;
-  myGrid[0][GAME_WIDTH-1] = PLAYER_TWO;
+  if(isForReal){
+    myGrid[GAME_HEIGHT -1][0] = PLAYER_ONE;
+    myGrid[0][GAME_WIDTH-1] = PLAYER_TWO;
+  }
 
   return myGrid;
 }
