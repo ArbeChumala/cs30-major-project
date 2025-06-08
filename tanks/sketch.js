@@ -9,6 +9,7 @@ let flyingBullet;
 let bulletExists = false;
 let windSpeed;
 let walls = [];
+let playerOnePlaying = true;
 
 let theArrow;
 let theBullet;
@@ -20,6 +21,9 @@ let playerTwoSideHeightFactor;
 let playerOneTank = {};
 let playerTwoTank = {};
 let tanks = [];
+let currentTank = {};
+
+let power;
 
 const {Detector, Engine, Render, Runner, Vector, Body, Bodies, Composite, Events} = Matter;
 
@@ -56,7 +60,7 @@ function setup() {
 
   windSpeed = 0;
 
-  Events.on(engine, "collisionStarted", turnsRed);
+
 
   playerOneSideHeightFactor = random(2 / 3, 7 / 8);
   playerTwoSideHeightFactor = random(2 / 3, 7 / 8);
@@ -83,6 +87,8 @@ function setup() {
     livesRemaining: 3,
   };
 
+  curentTank = structuredClone(playerOneTank);
+
   tanks.push(playerOneTank);
   tanks.push(playerTwoTank);
 
@@ -103,31 +109,28 @@ function draw() {
     theArrow.show();
     powerScale.show();
   }
+  if (bulletExists) {
+    theBullet.update();
+    theBullet.show();
+  }
 }
 
 function mouseDragged() {
   if (theArrow !== null) {
     powerScale.update(playerOneSideHeightFactor * height, mouseX, mouseY);
-    let power = powerScale.returnPower();
+    power = powerScale.returnPower();
     theArrow.update(power);
   }
 }
 
 function mousePressed() {
-  if (theArrow !== null) {
-    powerScale.update(playerOneSideHeightFactor * height, mouseX, mouseY);
-    let power = powerScale.returnPower();
-    theArrow.update(power);
+  if (theArrow !== null && Math.abs(mouseX - 7 * width / 8) < width / 8 && Math.abs(mouseY - height / 4) < height / 8) {
+    launchBullet();
   }
 }
 
-function turnsRed(event) {
-  pair = event.pairs;
-  pair.bodyA.render.fillStyle = 'red';
-  pair.bodyB.render.fillStyle = 'red';
-  objectMoving = false;
-  nextPlayersTurn();
-
+function turnsRed() {
+  console.log("this is happening");
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -144,6 +147,17 @@ function nextPlayersTurn() {
   }
 }
 
+function launchBullet() {
+  if (playerOnePlaying) {
+    theBullet = new Bullet(playerOneTank.x, playerOneTank.y + 5, theArrow.returnAngle(), power);
+  }
+  else {
+    theBullet = new Bullet(playerTwoTank.x, playerTwoTank.y + 5, theArrow.returnAngle(), power);
+  }
+  bulletExists = true;
+  theBullet.launch();
+}
+
 //-----------------------------------------------------------------------------------------------
 //classes
 //-----------------------------------------------------------------------------------------------
@@ -155,7 +169,7 @@ class Bullet {
     this.colour = "red";
 
     this.inclinationAngle = angle;
-    this.power = power;
+    this.power = power / 5;
 
     this.body = Bodies.circle(this.x, this.y, this.r);
     Composite.add(world, this.body);
@@ -187,6 +201,7 @@ class Bullet {
   }
 
   launch() {
+    console.log("this is working");
     let velocity = Vector.create(this.power*cos(this.inclinationAngle), - this.power*sin(this.inclinationAngle));
     Body.setVelocity(this.body, velocity);
   }
@@ -199,8 +214,8 @@ class Arrow {
     this.tankX = tankX;
     this.tankY = tankY;
 
-    this.x = this.tankX + 100;
-    this.y = this.tankY + 100;
+    this.x = this.tankX;
+    this.y = this.tankY - 100;
     this.colour = "black";
 
     this.stationaryLastFrame = true;
@@ -245,6 +260,16 @@ class Arrow {
     //   this.x = placeholderX;
     //   this.y = placeholderY;
     // }
+  }
+
+  returnAngle() {
+    let z = (this.x - this.tankX) ** 2 + (this.y - this.tankY) ** 2;
+    z = z ** (1/2);
+    let angle = asin((this.tankY - this.y) / z);
+    if (this.x < this.tankX) {
+      angle = 2 * 1.5708 - angle;
+    }
+    return angle;
   }
 }
 
