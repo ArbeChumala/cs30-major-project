@@ -5,6 +5,11 @@
 // Extra for Experts:
 // - describe what you did to take this project "above and beyond"
 
+const PADWIDTH = 600;
+const TOWERHEIGHT = 350;
+const TANKWIDTH = 75;
+const TANKHEIGHT = 50;
+
 let flyingBullet;
 let bulletExists = false;
 let windSpeed;
@@ -17,6 +22,7 @@ let powerScale;
 
 let playerOneSideHeightFactor;
 let playerTwoSideHeightFactor;
+let currentSideHeightFactor;
 
 let playerOneTank = {};
 let playerTwoTank = {};
@@ -34,8 +40,8 @@ Runner.run(runner, engine);
 
 class CollisionZone {
   constructor(x, y, w, h) {
-    this.x = x;
-    this.y = y;
+    this.x = x + w / 2;
+    this.y = y + h / 2;
     this.w = w;
     this.h = h;
 
@@ -60,34 +66,24 @@ function setup() {
 
   windSpeed = 0;
 
+  Events.on(engine, 'collisionStart', turnsRed);
 
+  playerOneSideHeightFactor = random(50, 150);
+  playerTwoSideHeightFactor = random(50, 150);
+  // temporary
+  currentSideHeightFactor = playerOneSideHeightFactor;
 
-  playerOneSideHeightFactor = random(2 / 3, 7 / 8);
-  playerTwoSideHeightFactor = random(2 / 3, 7 / 8);
-
-  let playerOneGround = new CollisionZone(width / 4, height * playerOneSideHeightFactor + height * playerOneSideHeightFactor / 2, width / 2, height * playerOneSideHeightFactor);
-  let playerTwoGround = new CollisionZone(3 * width / 4, height * playerTwoSideHeightFactor + height * playerTwoSideHeightFactor / 2, width / 2, height * playerTwoSideHeightFactor);
-  let tower = new CollisionZone(width / 2, 2 * height / 3, width / 8, 2 * height / 3);
+  let playerOneGround = new CollisionZone(width / 2 - PADWIDTH, height / 2 + playerOneSideHeightFactor, PADWIDTH, height / 2 - playerOneSideHeightFactor);
+  let playerTwoGround = new CollisionZone(width / 2, height / 2 + playerTwoSideHeightFactor, PADWIDTH, height / 2 - playerTwoSideHeightFactor);
+  let tower = new CollisionZone(width / 2 - PADWIDTH / 4, height - TOWERHEIGHT, PADWIDTH / 2, TOWERHEIGHT);
 
   walls.push(playerOneGround);
   walls.push(playerTwoGround);
   walls.push(tower);
   
-  playerOneTank = {
-    x: width / 4,
-    y: height * playerOneSideHeightFactor,
-    colour: "red",
-    livesRemaining: 3,
-  };
+  playerOneTank = new Tanks(width / 2 - PADWIDTH / 2, height / 2 + playerOneSideHeightFactor, TANKWIDTH, TANKHEIGHT, "red");
 
-  playerTwoTank = {
-    x: 3 * width / 4,
-    y: height * playerTwoSideHeightFactor,
-    colour: "blue",
-    livesRemaining: 3,
-  };
-
-  curentTank = structuredClone(playerOneTank);
+  playerTwoTank = new Tanks(width / 2 + PADWIDTH / 2, height / 2 + playerTwoSideHeightFactor, TANKWIDTH, TANKHEIGHT, "blue");
 
   tanks.push(playerOneTank);
   tanks.push(playerTwoTank);
@@ -97,6 +93,7 @@ function setup() {
 }
 
 function draw() {
+  rectMode(CENTER);
   background(220);
   for (let body of walls) {
     body.show();
@@ -117,7 +114,7 @@ function draw() {
 
 function mouseDragged() {
   if (theArrow !== null) {
-    powerScale.update(playerOneSideHeightFactor * height, mouseX, mouseY);
+    powerScale.update(height / 2 + currentSideHeightFactor, mouseX, mouseY);
     power = powerScale.returnPower();
     theArrow.update(power);
   }
@@ -141,9 +138,11 @@ function nextPlayersTurn() {
   playerOnePlaying = !playerOnePlaying;
   if (playerOnePlaying) {
     theArrow = new Arrow(playerOneTank.x, playerOneTank.y);
+    currentSideHeightFactor = playerOneSideHeightFactor;
   }
   else {
     theArrow = new Arrow(playerTwoTank.x, playerTwoTank.y);
+    currentSideHeightFactor = playerTwoSideHeightFactor;
   }
 }
 
@@ -164,7 +163,7 @@ function launchBullet() {
 class Bullet {
   constructor(x, y, angle, power) {
     this.x = x;
-    this.y = y;
+    this.y = y - TANKHEIGHT / 2;
     this.r = 5;
     this.colour = "red";
 
@@ -228,6 +227,7 @@ class Arrow {
     strokeWeight(5);
   
     line(this.x, this.y, this.tankX, this.tankY);
+    noStroke();
   }
   update(power) {
     let dx;
@@ -305,7 +305,29 @@ class PowerScale {
   show() {
     fill(this.colour);
     rect(this.x, this.y, this.w, this.h);
-    fill(0);
+    fill("green");
     rect(this.barX, this.y, this.w / 8, this.h);
+  }
+}
+
+class Tanks {
+  constructor(x, y, w, h, colour) {
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.colour = colour;
+    this.livesRemaining = 3;
+
+    this.body = Bodies.rectangle(this.x, this.y, this.w, this.h);
+    Composite.add(world, this.body);
+  }
+
+  show() {
+    rectMode(CENTER, CENTER);
+    strokeWeight(1);
+    fill(this.colour);
+    rect(this.x, this.y, this.w, this.h);
+    strokeWeight(0);
   }
 }
