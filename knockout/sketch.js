@@ -6,7 +6,7 @@
 // - describe what you did to take this project "above and beyond"
 
 // module aliases
-const {Engine, Render, Runner, Vector, Body, Bodies, Composite} = Matter;
+const {Engine, Events, Render, Runner, Vector, Body, Bodies, Composite} = Matter;
 
 let myRoom;
 let userInput;
