@@ -161,10 +161,7 @@ function ballOut(){
   let samePlayerAgain = false;
   for (let i = balls.length - 1; i >= 0; i --){
     console.log("looping");
-    if (balls[i].x < width / 8 ||
-        balls[i].x > 7 * width / 8 ||
-        balls[i].y < height / 8 ||
-        balls[i].y > 7 * height / 8){
+    if (balls[i].ballSunk){
 
       // if the ball is the cue call, sets a variable to true and tries to move it back to the middle, as well as switching the player
       // playing if it fell (works because it is always the last ball in the array)
@@ -248,9 +245,19 @@ function ballsMoving(){
 
 function createBalls(){
   for(let i = 0; i<15; i++){
-    let column = findColumn(i);
+    let index;
+    if(i === 4){
+      index = 7;
+    }
+    else if (i === 7){
+      index = 4;
+    }
+    else{
+      index = i;
+    }
+    let column = findColumn(index);
     let x = findX(column);
-    let y = findY(i,column);
+    let y = findY(index,column);
     let someBall = new Ball(x, y, i);
     balls.push(someBall);
   }
@@ -322,12 +329,15 @@ function createBoundaries(){
   walls.push(leftWall);
   walls.push(rightWall);
 
+  let someShortTrapezoid = new TrapezoidWall(-1, -1, trapezoid);
+  walls.push(someShortTrapezoid);
+
   for(let leftRight=-1; leftRight<=1; leftRight+=2){
     for(let upDown = -1; upDown <=1; upDown +=2){
       let someShortWall = new Wall(width/2 + leftRight*short.centreX, height/2 + upDown*short.centreY, short.distanceX, short.distanceY);
       walls.push(someShortWall);
-      let someShortTrapezoid = new TrapezoidWall(leftRight, upDown, trapezoid);
-      walls.push(someShortTrapezoid);
+      // let someShortTrapezoid = new TrapezoidWall(leftRight, upDown, trapezoid);
+      // walls.push(someShortTrapezoid);
     }
   }
   
@@ -356,13 +366,16 @@ class Ball{
     this.striped = this.id > 7 && this.id <15;
     this.eightBall = id === 7;
     this.cueBall = id === 15;
+    this.ballSinking = false;
+    this.ballSunk = false;
+    this.r = BALL_RADIUS;
     this.options ={
       restitution: 0.8,
       slop: 0.05,
       friction: 0.25,
     };
 
-    this.body = Bodies.circle(this.x, this.y, BALL_RADIUS, this.options);
+    this.body = Bodies.circle(this.x, this.y, this.r, this.options);
     Composite.add(world, this.body);
 
     this.angle = this.body.angle;
@@ -375,20 +388,25 @@ class Ball{
     noSmooth();
     imageMode(CENTER);
     tint(230);
-    image(ballGridImage, 0, 0, BALL_RADIUS*2, BALL_RADIUS*2, this.imageX, this.imageY, this.imageW, this.imageW);
+    image(ballGridImage, 0, 0, this.r*2, this.r*2, this.imageX, this.imageY, this.imageW, this.imageW);
     noTint();
     pop();
   }
 
   update(){
-    if (Math.abs(this.body.velocity.x) < 0.1 && Math.abs(this.body.velocity.y) < 0.1){
-      let stationary = Vector.create(0, 0);
-      Body.setVelocity(this.body, stationary);
+    if (!this.ballSinking) {
+      if (Math.abs(this.body.velocity.x) < 0.1 && Math.abs(this.body.velocity.y) < 0.1){
+        let stationary = Vector.create(0, 0);
+        Body.setVelocity(this.body, stationary);
+      }
+  
+      this.x = this.body.position.x;
+      this.y = this.body.position.y;
+      this.angle = this.body.angle;
     }
-
-    this.x = this.body.position.x;
-    this.y = this.body.position.y;
-    this.angle = this.body.angle;
+    else{
+      this.r -= 0.5;
+    }
   }
 
   changeVelocity(distanceX, distanceY){
@@ -409,6 +427,16 @@ class Ball{
       return false;
     }
     return true;
+  }
+
+  ballSinks() {
+    if (this.r > 0.5) {
+      this.ballSinking = true;
+    }
+    else {
+      this.ballSunk = true;
+      Composite.remove(world, this.body);
+    }
   }
 }
 
@@ -533,7 +561,7 @@ class Wall{
   show(){
     push();
     noStroke();
-    fill(255, 255, 255, 0);
+    fill(255, 255, 255, 50);
     rectMode(CENTER);
     rect(this.x, this.y, this.w, this.h);
     pop();
@@ -573,7 +601,7 @@ class TrapezoidWall{
   show(){
     push();
     noStroke();
-    fill(255, 255, 255, 0);
+    fill(255, 255, 255, 50);
     quad(
       this.vertices[0].x, this.vertices[0].y, 
       this.vertices[1].x, this.vertices[1].y,

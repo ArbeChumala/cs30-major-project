@@ -74,6 +74,7 @@ function setup(){
   textFont(poppins);
   fill(255);
   text("Join Room", width/2, height/2 - 100);
+  Events.on(engine, "collisionStart", sendMessage);
 }
 
 function draw(){
@@ -136,6 +137,10 @@ function keyPressed(){
 //-----------------------------------------------------------------------------------------------
 //functions called by other functions
 //-----------------------------------------------------------------------------------------------
+function sendMessage(event){
+  console.log(event);
+}
+
 function startParty(){
   myRoom = userInput.value();
   partyConnect(
