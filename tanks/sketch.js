@@ -6,7 +6,7 @@
 // - describe what you did to take this project "above and beyond"
 
 const PADWIDTH = 600;
-const TOWERHEIGHT = 350;
+const TOWERHEIGHT = 600;
 const TANKWIDTH = 75;
 const TANKHEIGHT = 50;
 
@@ -81,9 +81,9 @@ function setup() {
   walls.push(playerTwoGround);
   walls.push(tower);
   
-  playerOneTank = new Tanks(width / 2 - PADWIDTH / 2, height / 2 + playerOneSideHeightFactor, TANKWIDTH, TANKHEIGHT, "red");
+  playerOneTank = new Tanks(width / 2 - PADWIDTH / 2, height / 2 + playerOneSideHeightFactor - TANKHEIGHT / 2, TANKWIDTH, TANKHEIGHT, "red");
 
-  playerTwoTank = new Tanks(width / 2 + PADWIDTH / 2, height / 2 + playerTwoSideHeightFactor, TANKWIDTH, TANKHEIGHT, "blue");
+  playerTwoTank = new Tanks(width / 2 + PADWIDTH / 2, height / 2 + playerTwoSideHeightFactor - TANKHEIGHT / 2, TANKWIDTH, TANKHEIGHT, "blue");
 
   tanks.push(playerOneTank);
   tanks.push(playerTwoTank);
@@ -126,8 +126,37 @@ function mousePressed() {
   }
 }
 
-function turnsRed() {
-  console.log("this is happening");
+function turnsRed(event) {
+  if (bulletExists) {
+    let notTheBall;
+    let ballCollision = false;
+    let pairs = event.pairs;
+    console.log(theBullet.body.id);
+    console.log(pairs);
+    // if (pairs.BodyA.id === theBullet.body.id) {
+    //   notTheBall = pairs.BodyB.id;
+    //   ballCollision = true;
+    // }
+    // else if (pairs.BodyB.id === theBullet.body.id) {
+    //   notTheBall = pairs.bodyA.id;
+    //   ballCollision = true;
+    // }
+    // if (ballCollision) {
+
+    //   // play sound here
+
+    //   // this is where an explosion thingy would make sense
+    //   if (notTheBall === playerOneTank.body.id) {
+    //     playerOneTank.livesRemaining --;
+    //   }
+    //   else if (notTheBall === playerOneTank.body.id) {
+    //     playerTwoTank.livesRemaining --;
+    //   }
+    //   if (notTheBall === !tower.body.id) {
+    //     nextPlayersTurn();
+    //   }
+    // }
+  }
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -135,6 +164,7 @@ function turnsRed() {
 // ----------------------------------------------------------------------------------------------
 
 function nextPlayersTurn() {
+  Composite.remove(world, theBullet.body);
   playerOnePlaying = !playerOnePlaying;
   if (playerOnePlaying) {
     theArrow = new Arrow(playerOneTank.x, playerOneTank.y);
@@ -299,7 +329,7 @@ class PowerScale {
   }
 
   returnPower() {
-    return (this.barX - this.x + this.w / 2) * 75 / this.w + 25;
+    return (this.barX - this.x + this.w / 2) * 100 / this.w + 25;
   }
 
   show() {
