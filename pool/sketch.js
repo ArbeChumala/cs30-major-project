@@ -18,10 +18,11 @@ let runner = Runner.create();
 Runner.run(runner, engine);
 
 // define initial variables
-let radius = 20;
+const BALL_RADIUS = 20;
+const SHADOW_OFFSET = 5;
+let coloursList = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "lightgreen", "lightblue"];
 let balls = [];
 let walls = [];
-let coloursList = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "lightgreen", "lightblue"];
 let ballsMovingVar = false;
 let isDrawnBack = false;
 let cueSpeedFactor = 20;
@@ -37,16 +38,38 @@ let stripedPlayerBalls;
 let nonStripedPlayerBalls;
 let playerHasWon = false;
 
+let poolTableImg;
+let ballImg;
+
+let pixelRatio;
+
+
+
+function preload(){
+  poolTableImg = loadImage("assets/images/pool-tabeel.png");
+  ballGridImage = loadImage("assets/images/balls.png");
+}
+
+
 
 function setup(){
   createCanvas(windowWidth, windowHeight);
+  console.log(poolTableImg.width);
+  pixelRatio = 1000/poolTableImg.width;
 
   // calls functions to create barriers and balls
   createGame();
 }
 
 function draw(){
-  background(220);
+  background("#294535");
+  imageMode(CENTER);
+  smooth();
+  tint(10, 50);
+  image(poolTableImg, width/2 - 2*SHADOW_OFFSET, height/2 + 2*SHADOW_OFFSET, poolTableImg.width*pixelRatio, poolTableImg.height*pixelRatio);
+  noTint();
+  noSmooth();
+  image(poolTableImg, width/2, height/2, poolTableImg.width*pixelRatio, poolTableImg.height*pixelRatio);
 
   // if the eight ball has been sunk, displays winning message
   if (playerHasWon){
@@ -61,6 +84,9 @@ function draw(){
 
     // iterates through all balls, showing and updating them, as well as giving the x and y values of the cue ball
     for (let ball of balls){
+      ball.drawShadow();
+    }
+    for (let ball of balls){
       ball.update();
       ball.show();
       if (ball.cueBall){
@@ -68,6 +94,7 @@ function draw(){
         ballY = ball.body.position.y;
       }
     }
+    
 
     // checks if the cue should be shown and if the balls just stopped moving last frame
     let showCue = !ballsMoving();
@@ -86,6 +113,7 @@ function draw(){
 
     // shows current player playing
     fill(0);
+    strokeWeight(1);
     textSize(20);
     text("is player striped playing? " + stripedPlayerPlaying, 100, 100);
   }
@@ -181,79 +209,160 @@ function ballsMoving(){
   return false;
 }
 
+// function createBalls(){
+//   stripedPlayerBalls = 7;
+//   nonStripedPlayerBalls = 7;
+//   let isStriped = true;
+//   let x = 2 * width / 3;
+//   let y = height / 2;
+//   let counter = [-1];
+//   let coloursRemaining = coloursList.length - 1;
+//   for (let n = 0; n < 5; n ++){
+//     let lastCounter = counter.length - 1;
+//     counter.push(counter[lastCounter] + 1);
+//     lastCounter ++;
+//     if (counter[lastCounter] === 0){
+//       counter.splice(0, 1);
+//       lastCounter --;
+//     }
+//     let aBall;
+//     for (let number of counter){
+//       let yModifier = number - counter[lastCounter] / 2;
+//       if (lastCounter === 2 && number === 1){
+//         aBall = new Ball(x + lastCounter * 25 * 2**(1/2), y + yModifier * 30 * 2**(1/2), "black", false, true, false);
+//       }
+//       else{
+//         aBall = new Ball(x + lastCounter * 25 * 2**(1/2), y + yModifier * 30 * 2**(1/2), coloursList[coloursRemaining], isStriped, false, false);
+//         isStriped = !isStriped;
+//       }
+//       balls.push(aBall);
+//       if (isStriped){
+//         coloursRemaining --;
+//       }
+//     }
+//     cue = new Cue(width / 3, height / 2);
+//   }
+//   aBall = new Ball(width / 3, height / 2, "white", false, false, true);
+//   balls.push(aBall);
+// }
+
 function createBalls(){
-  stripedPlayerBalls = 7;
-  nonStripedPlayerBalls = 7;
-  let isStriped = true;
-  let x = 2 * width / 3;
-  let y = height / 2;
-  let counter = [-1];
-  let coloursRemaining = coloursList.length - 1;
-  for (let n = 0; n < 5; n ++){
-    let lastCounter = counter.length - 1;
-    counter.push(counter[lastCounter] + 1);
-    lastCounter ++;
-    if (counter[lastCounter] === 0){
-      counter.splice(0, 1);
-      lastCounter --;
-    }
-    let aBall;
-    for (let number of counter){
-      let yModifier = number - counter[lastCounter] / 2;
-      if (lastCounter === 2 && number === 1){
-        aBall = new Ball(x + lastCounter * 25 * 2**(1/2), y + yModifier * 30 * 2**(1/2), "black", false, true, false);
-      }
-      else{
-        aBall = new Ball(x + lastCounter * 25 * 2**(1/2), y + yModifier * 30 * 2**(1/2), coloursList[coloursRemaining], isStriped, false, false);
-        isStriped = !isStriped;
-      }
-      balls.push(aBall);
-      if (isStriped){
-        coloursRemaining --;
-      }
-    }
-    cue = new Cue(width / 3, height / 2);
+  for(let i = 0; i<15; i++){
+    let column = findColumn(i);
+    let x = findX(column);
+    let y = findY(i,column);
+    let someBall = new Ball(x, y, i);
+    balls.push(someBall);
   }
-  aBall = new Ball(width / 3, height / 2, "white", false, false, true);
-  balls.push(aBall);
+  let cueBall = new Ball(width/2, height/2, 15);
+  balls.push(cueBall);
+
+  cue = new Cue(width / 3, height / 2);
+}
+
+function findColumn(n){
+  for(let column  = 4; column>=0; column--){
+    let lastOfRow = column*(column+1)/2;
+    if(n >= lastOfRow){
+      return column +1;
+    }
+  }
+}
+
+function findX(column){
+  let startingX = width/2 + 100;
+  let horizontalGap = sqrt(3)*BALL_RADIUS;
+  return startingX + horizontalGap*column;
+}
+
+function findY(n, column){
+  let startingY = height/2;
+  let firstOfRow = column*(column-1)/2;
+  let placement = n-firstOfRow;
+
+  return startingY +(column-1)*BALL_RADIUS - placement*2*BALL_RADIUS;
 }
 
 function createBoundaries(){
   walls = [];
-  let leftWall = new Wall(width / 8, height / 2, 30,  3 * height / 5);
-  let topWall = new Wall(width / 2, height / 8, 3 * width / 4.5, 30);
-  let rightWall = new Wall(7 * width / 8, height / 2, 30, 3 * height / 5);
-  let bottomWall = new Wall(width / 2, 7 * height / 8, 3 * width / 4.5, 30);
+  let horizontalDistance = 500;
+  let horizontalWidth = 30;
+  let verticalDistance = 260;
+  let verticalHeight = 35;
+
+  let long = {
+    startX: horizontalDistance,
+    endX: horizontalDistance - horizontalWidth,
+    centreX: horizontalDistance - horizontalWidth/2,
+    distanceX: horizontalWidth,
+    centreY: height/2,
+    distanceY: 2*verticalDistance - 2*horizontalWidth,
+  };
+  
+  let short = {
+    startX: horizontalDistance-horizontalWidth,
+    endX: horizontalWidth,
+    centreX: (horizontalDistance-horizontalWidth + horizontalWidth)/2,
+    distanceX: horizontalDistance-horizontalWidth - horizontalWidth,
+    startY: verticalDistance,
+    endY: verticalDistance-verticalHeight,
+    centreY: verticalDistance - verticalHeight/2,
+    distanceY: verticalHeight,
+  };
+
+  trapezoid = [
+    {x: 410, y:220},
+    {x: 30, y: 220},
+    {x: 30, y: 208},
+    {x: 410, y: 208},
+  ];
+
+  let leftWall = new Wall(width/2 - long.centreX, long.centreY, long.distanceX,  long.distanceY);
+  let rightWall = new Wall(width/2 + long.centreX, long.centreY, long.distanceX, long.distanceY);
   walls.push(leftWall);
   walls.push(rightWall);
-  walls.push(topWall);
-  walls.push(bottomWall);
+
+  for(let leftRight=-1; leftRight<=1; leftRight+=2){
+    for(let upDown = -1; upDown <=1; upDown +=2){
+      let someShortWall = new Wall(width/2 + leftRight*short.centreX, height/2 + upDown*short.centreY, short.distanceX, short.distanceY);
+      walls.push(someShortWall);
+      let someShortTrapezoid = new TrapezoidWall(leftRight, upDown, trapezoid);
+      walls.push(someShortTrapezoid);
+    }
+  }
+  
   playerHasWon = false;
 }
-// function mousePressed(){
-//   let aBall = new Ball(mouseX, mouseY, "red", true);
-//   balls.push(aBall);
-// }
+function mousePressed(){
+  let x = Math.abs(width/2-mouseX);
+  let y = Math.abs(height/2-mouseY);
+  console.log([x, y]);
+}
 
 // ---------------------------------------------------------------------------------------------------------
 // Classes
 // ---------------------------------------------------------------------------------------------------------
 
 class Ball{
-  constructor(x, y, colour, striped, eightBall, cueBall){
+  constructor(x, y, id){
     this.x = x;
     this.y = y;
-    this.colour = colour;
-    this.striped = striped;
-    this.eightBall = eightBall;
-    this.cueBall = cueBall;
+    this.originalX = x;;
+    this.originalY = y;
+    this.id = id;
+    this.imageX = this.id%8*15;
+    this.imageY = Math.floor(this.id/8)*15;
+    this.imageW = 15;
+    this.striped = this.id > 7 && this.id <15;
+    this.eightBall = id === 7;
+    this.cueBall = id === 15;
     this.options ={
       restitution: 0.8,
       slop: 0.05,
       friction: 0.25,
     };
 
-    this.body = Bodies.circle(this.x, this.y, radius, this.options);
+    this.body = Bodies.circle(this.x, this.y, BALL_RADIUS, this.options);
     Composite.add(world, this.body);
 
     this.angle = this.body.angle;
@@ -263,12 +372,11 @@ class Ball{
     push();
     translate(this.x, this.y);
     rotate(this.angle);
-    fill(this.colour);
-    circle(0, 0, 2 * radius);
-    if (this.striped){
-      fill("white");
-      circle(0, 0, radius);
-    }
+    noSmooth();
+    imageMode(CENTER);
+    tint(230);
+    image(ballGridImage, 0, 0, BALL_RADIUS*2, BALL_RADIUS*2, this.imageX, this.imageY, this.imageW, this.imageW);
+    noTint();
     pop();
   }
 
@@ -288,6 +396,14 @@ class Ball{
     Body.setVelocity(this.body, this.velocity);
   }
 
+  drawShadow(){
+    smooth();
+    tint(10, 50);
+    image(ballGridImage, this.x - SHADOW_OFFSET, this.y + SHADOW_OFFSET, BALL_RADIUS*2, BALL_RADIUS*2, this.imageX, this.imageY, this.imageW, this.imageW);
+    noTint();
+    noSmooth();
+  }
+
   isMoving(){
     if (this.body.velocity.x === 0 && this.body.velocity.y === 0){
       return false;
@@ -301,7 +417,7 @@ class Cue{
     this.ballX = ballX;
     this.ballY = ballY;
 
-    this.x = ballX - 100 - radius;
+    this.x = ballX - 100 - BALL_RADIUS;
     this.y = ballY;
 
     this.strikeX = ballX;
@@ -333,7 +449,7 @@ class Cue{
       this.strikeX -= this.strikeRatio * this.distanceX / cueSpeedFactor;
       this.strikeY -= this.strikeRatio * this.distanceY / cueSpeedFactor;
 
-      if (this.distance < 100 + radius){
+      if (this.distance < 100 + BALL_RADIUS){
         this.movingIn = false;
         for (let ball of balls){
           if (ball.cueBall){
@@ -358,10 +474,10 @@ class Cue{
       this.isDrawnBack = true;
       this.movingIn = false;
     }
-    else if (this.isDrawnBack &&this.distance <= 100 + radius){
+    else if (this.isDrawnBack &&this.distance <= 100 + BALL_RADIUS){
       this.isDrawnBack = false;
 
-      this.x = this.ballX - 100 - radius;
+      this.x = this.ballX - 100 - BALL_RADIUS;
       this.y = this.ballY;
       this.strikeX = this.ballX;
       this.strikeY = this.ballY;
@@ -386,8 +502,8 @@ class Cue{
   }
 
   show(){
-    fill("black");
-    stroke(4);
+    stroke("black");
+    strokeWeight(4);
     line(this.x, this.y, this.strikeX, this.strikeY);
   }
 
@@ -416,9 +532,54 @@ class Wall{
 
   show(){
     push();
-    fill("blue");
-    quad(this.x1, this.y1, this.x1, this.y2, this.x2, this.y2, this.x2, this.y1);
+    noStroke();
+    fill(255, 255, 255, 0);
+    rectMode(CENTER);
+    rect(this.x, this.y, this.w, this.h);
     pop();
   }
 }
 
+class TrapezoidWall{
+  constructor(xSign, ySign, vertexArray){
+
+    let newVertexArray = [];
+
+    for (let vertexPair of vertexArray){
+      let adjustedX = width/2 + xSign*vertexPair.x;
+      let adjustedY = height/2 + ySign*vertexPair.y;
+
+      let theObject = {
+        x: adjustedX,
+        y: adjustedY,
+      };
+
+      newVertexArray.push(theObject);
+    }
+
+    this.vertices = newVertexArray;
+    console.log(this.vertices);
+
+    this.options ={
+      isStatic: true,
+      restitution: 0.8,
+      slop: 0.1,
+    };
+
+    this.body = Bodies.fromVertices(this.vertices[0].x, this.vertices[0].y, this.vertices, this.options);
+    Composite.add(world, this.body);
+  }
+
+  show(){
+    push();
+    noStroke();
+    fill(255, 255, 255, 0);
+    quad(
+      this.vertices[0].x, this.vertices[0].y, 
+      this.vertices[1].x, this.vertices[1].y,
+      this.vertices[2].x, this.vertices[2].y,
+      this.vertices[3].x, this.vertices[3].y,
+    );
+    pop();
+  }
+}
