@@ -90,13 +90,23 @@ function setup(){
   noLoop();
   setupCanvas();
 
-  userInput = createInput('main');
-  userInput.center();
+  
   background("#43AA8B");
+
   textSize(100);
   textFont(poppins);
   fill(255);
-  text("Join Room", width/2, height/2 - 100);
+  text("Reversi", width/2, height/2 - 100);
+
+  textSize(40);
+  text("JOIN ROOM", width/2, height/2);
+
+  userInput = createInput('main');
+  userInput.position(width/2, height/2+25);
+  userInput.center("horizontal");
+
+  textSize(40);
+  text("BOT MODE", width/2, height/2+200);
 }
 
 function windowResized(){
