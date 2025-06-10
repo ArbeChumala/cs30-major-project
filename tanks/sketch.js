@@ -24,10 +24,11 @@ let playerOneSideHeightFactor;
 let playerTwoSideHeightFactor;
 let currentSideHeightFactor;
 
-let playerOneTank = {};
-let playerTwoTank = {};
+let playerOneTank;
+let playerTwoTank;
 let tanks = [];
 let currentTank = {};
+let tower;
 
 let power;
 
@@ -75,7 +76,7 @@ function setup() {
 
   let playerOneGround = new CollisionZone(width / 2 - PADWIDTH, height / 2 + playerOneSideHeightFactor, PADWIDTH, height / 2 - playerOneSideHeightFactor);
   let playerTwoGround = new CollisionZone(width / 2, height / 2 + playerTwoSideHeightFactor, PADWIDTH, height / 2 - playerTwoSideHeightFactor);
-  let tower = new CollisionZone(width / 2 - PADWIDTH / 4, height - TOWERHEIGHT, PADWIDTH / 2, TOWERHEIGHT);
+  tower = new CollisionZone(width / 2 - PADWIDTH / 4, height - TOWERHEIGHT, PADWIDTH / 2, TOWERHEIGHT);
 
   walls.push(playerOneGround);
   walls.push(playerTwoGround);
@@ -130,32 +131,33 @@ function turnsRed(event) {
   if (bulletExists) {
     let notTheBall;
     let ballCollision = false;
-    let pairs = event.pairs;
+    let pairsArray = structuredClone(event.pairs);
     console.log(theBullet.body.id);
-    console.log(pairs);
-    // if (pairs.BodyA.id === theBullet.body.id) {
-    //   notTheBall = pairs.BodyB.id;
-    //   ballCollision = true;
-    // }
-    // else if (pairs.BodyB.id === theBullet.body.id) {
-    //   notTheBall = pairs.bodyA.id;
-    //   ballCollision = true;
-    // }
-    // if (ballCollision) {
+    console.log(pairsArray);
+    console.log(pairsArray[0].bodyA.id);
+    if (pairsArray[0].bodyA.id === theBullet.body.id) {
+      notTheBall = pairsArray.bodyB.id;
+      ballCollision = true;
+    }
+    else if (pairsArray[0].bodyB.id === theBullet.body.id) {
+      notTheBall = pairsArray[0].bodyA.id;
+      ballCollision = true;
+    }
+    if (ballCollision) {
 
-    //   // play sound here
+      // play sound here
 
-    //   // this is where an explosion thingy would make sense
-    //   if (notTheBall === playerOneTank.body.id) {
-    //     playerOneTank.livesRemaining --;
-    //   }
-    //   else if (notTheBall === playerOneTank.body.id) {
-    //     playerTwoTank.livesRemaining --;
-    //   }
-    //   if (notTheBall === !tower.body.id) {
-    //     nextPlayersTurn();
-    //   }
-    // }
+      // this is where an explosion thingy would make sense
+      if (notTheBall === playerOneTank.body.id) {
+        playerOneTank.livesRemaining --;
+      }
+      else if (notTheBall === playerOneTank.body.id) {
+        playerTwoTank.livesRemaining --;
+      }
+      if (notTheBall !== tower.body.id) {
+        nextPlayersTurn();
+      }
+    }
   }
 }
 
