@@ -6,7 +6,7 @@
 // - describe what you did to take this project "above and beyond"
 
 // initialize matter js elements
-const{Engine, Render, Runner, Vector, Body, Bodies, Composite} = Matter;
+const{Engine, Events, Render, Runner, Vector, Body, Bodies, Composite} = Matter;
 
 // create an engine
 let engine = Engine.create();
@@ -18,11 +18,34 @@ let runner = Runner.create();
 Runner.run(runner, engine);
 
 // define initial variables
-const BALL_RADIUS = 20;
+const HOLE_RADIUS = 5;
+const BALL_RADIUS = 17;
 const SHADOW_OFFSET = 5;
-let coloursList = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "lightgreen", "lightblue"];
+
+//measured from width/2 and height/2
+const H_FAR_TRAPEZOID_X = 460;
+const H_MIDDLE_TRAPEZOID_X = 410;
+const H_CLOSE_TRAPEZOID_X = 30;
+const H_FAR_TRAPEZOID_Y = 260;
+const H_CLOSE_TRAPEZOID_Y = 205;
+
+let horizontalTrapezoidMeasurments;
+
+const V_FAR_TRAPEZOID_X = 500;
+const V_CLOSE_TRAPEZOID_X = 440;
+const V_MIDDLE_TRAPEZOID_Y = 160;
+const V_CLOSE_TRAPEZOID_Y = 0.5;
+const V_FAR_TRAPEZOID_Y = 220;
+
+let verticalTrapezoidMeasurements;
+
+const HOLE_FAR_X = 460;
+const HOLE_FAR_Y = 220;
+
 let balls = [];
 let walls = [];
+let holes = [];
+
 let ballsMovingVar = false;
 let isDrawnBack = false;
 let cueSpeedFactor = 20;
@@ -50,15 +73,56 @@ function preload(){
   ballGridImage = loadImage("assets/images/balls.png");
 }
 
-
-
 function setup(){
   createCanvas(windowWidth, windowHeight);
   console.log(poolTableImg.width);
   pixelRatio = 1000/poolTableImg.width;
 
+  horizontalTrapezoidMeasurments = {
+    vertices: [
+      {x: H_FAR_TRAPEZOID_X, y:H_FAR_TRAPEZOID_Y},
+      {x: H_CLOSE_TRAPEZOID_X, y: H_FAR_TRAPEZOID_Y},
+      {x: H_CLOSE_TRAPEZOID_X, y: H_CLOSE_TRAPEZOID_Y},
+      {x: H_MIDDLE_TRAPEZOID_X, y: H_CLOSE_TRAPEZOID_Y},
+    ],
+    centre: {
+      x: (H_FAR_TRAPEZOID_X + H_CLOSE_TRAPEZOID_X)/2,
+      y: (H_FAR_TRAPEZOID_Y + H_CLOSE_TRAPEZOID_Y)/2,
+    },
+  };
+
+  verticalTrapezoidMeasurements = {
+    vertices: [
+      {x: V_FAR_TRAPEZOID_X, y: V_FAR_TRAPEZOID_Y},
+      {x: V_CLOSE_TRAPEZOID_X, y: V_MIDDLE_TRAPEZOID_Y},
+      {x: V_CLOSE_TRAPEZOID_X, y: V_CLOSE_TRAPEZOID_Y},
+      {x: V_FAR_TRAPEZOID_X, y: V_CLOSE_TRAPEZOID_Y},
+    ],
+    centre: {
+      x: (V_FAR_TRAPEZOID_X + V_CLOSE_TRAPEZOID_X)/2,
+      y: (V_FAR_TRAPEZOID_Y + V_CLOSE_TRAPEZOID_Y)/2,
+    },
+  };
+
   // calls functions to create barriers and balls
+  Events.on(engine, "collisionStart", collisionManager);
   createGame();
+}
+
+function collisionManager(event){
+  let pairsArray = structuredClone(event.pairs);
+  console.log(pairsArray);
+
+  for(let pair of pairsArray){
+    if(pair.bodyA.label === "hole" && pair.bodyB.label === "ball"){
+      pair.bodyB.ballSinking = true;
+      console.log("sinking");
+    }
+    else if (pair.bodyA.label === "ball" && pair.bodyB.label === "hole"){
+      pair.bodyA.ballSinking = true;
+      console.log("sinking");
+    }
+  }
 }
 
 function draw(){
@@ -88,13 +152,15 @@ function draw(){
     }
     for (let ball of balls){
       ball.update();
+      if(ball.body.ballSinking){
+        console.log("HECK");
+      }
       ball.show();
       if (ball.cueBall){
         ballX = ball.body.position.x;
         ballY = ball.body.position.y;
       }
     }
-    
 
     // checks if the cue should be shown and if the balls just stopped moving last frame
     let showCue = !ballsMoving();
@@ -110,6 +176,9 @@ function draw(){
     for (let wall of walls){
       wall.show();
     }
+    for(let hole of holes){
+      hole.show();
+    }
 
     // shows current player playing
     fill(0);
@@ -123,6 +192,7 @@ function draw(){
 function createGame(){
   createBalls();
   createBoundaries();
+  createHoles();
 }
 
 // called when the eight ball has been sunk, shows which player won
@@ -161,14 +231,20 @@ function ballOut(){
   let samePlayerAgain = false;
   for (let i = balls.length - 1; i >= 0; i --){
     console.log("looping");
-    if (balls[i].ballSunk){
+    if (balls[i].body.ballSunk){
 
       // if the ball is the cue call, sets a variable to true and tries to move it back to the middle, as well as switching the player
       // playing if it fell (works because it is always the last ball in the array)
       if (balls[i].cueBall){
         cueBallFallen = true;
-        let homeBase = Vector.create(width/4, height/2);
+        let homeBase = Vector.create(width/2-100, height/2);
+
+        // balls[i].body.ballSinking = false;
+        // balls[i].body.ballSunk = false;
+
+        // Composite.add(world, balls[i].body);
         Body.setPosition(balls[i].body, homeBase);
+
         samePlayerAgain = false;
       }
 
@@ -188,6 +264,8 @@ function ballOut(){
         else{
           nonStripedPlayerBalls --;
         }
+
+        // Composite.remove(world, balls[i].body);
         balls.splice(i, 1);
       }
     }
@@ -205,43 +283,6 @@ function ballsMoving(){
   }
   return false;
 }
-
-// function createBalls(){
-//   stripedPlayerBalls = 7;
-//   nonStripedPlayerBalls = 7;
-//   let isStriped = true;
-//   let x = 2 * width / 3;
-//   let y = height / 2;
-//   let counter = [-1];
-//   let coloursRemaining = coloursList.length - 1;
-//   for (let n = 0; n < 5; n ++){
-//     let lastCounter = counter.length - 1;
-//     counter.push(counter[lastCounter] + 1);
-//     lastCounter ++;
-//     if (counter[lastCounter] === 0){
-//       counter.splice(0, 1);
-//       lastCounter --;
-//     }
-//     let aBall;
-//     for (let number of counter){
-//       let yModifier = number - counter[lastCounter] / 2;
-//       if (lastCounter === 2 && number === 1){
-//         aBall = new Ball(x + lastCounter * 25 * 2**(1/2), y + yModifier * 30 * 2**(1/2), "black", false, true, false);
-//       }
-//       else{
-//         aBall = new Ball(x + lastCounter * 25 * 2**(1/2), y + yModifier * 30 * 2**(1/2), coloursList[coloursRemaining], isStriped, false, false);
-//         isStriped = !isStriped;
-//       }
-//       balls.push(aBall);
-//       if (isStriped){
-//         coloursRemaining --;
-//       }
-//     }
-//     cue = new Cue(width / 3, height / 2);
-//   }
-//   aBall = new Ball(width / 3, height / 2, "white", false, false, true);
-//   balls.push(aBall);
-// }
 
 function createBalls(){
   for(let i = 0; i<15; i++){
@@ -292,57 +333,75 @@ function findY(n, column){
 
 function createBoundaries(){
   walls = [];
-  let horizontalDistance = 500;
-  let horizontalWidth = 30;
-  let verticalDistance = 260;
-  let verticalHeight = 35;
 
-  let long = {
-    startX: horizontalDistance,
-    endX: horizontalDistance - horizontalWidth,
-    centreX: horizontalDistance - horizontalWidth/2,
-    distanceX: horizontalWidth,
-    centreY: height/2,
-    distanceY: 2*verticalDistance - 2*horizontalWidth,
-  };
-  
-  let short = {
-    startX: horizontalDistance-horizontalWidth,
-    endX: horizontalWidth,
-    centreX: (horizontalDistance-horizontalWidth + horizontalWidth)/2,
-    distanceX: horizontalDistance-horizontalWidth - horizontalWidth,
-    startY: verticalDistance,
-    endY: verticalDistance-verticalHeight,
-    centreY: verticalDistance - verticalHeight/2,
-    distanceY: verticalHeight,
-  };
+  for(let upDown=-1; upDown<=1; upDown+=2){
+    for(let leftRight = -1; leftRight <=1; leftRight +=2){
 
-  trapezoid = [
-    {x: 410, y:220},
-    {x: 30, y: 220},
-    {x: 30, y: 208},
-    {x: 410, y: 208},
-  ];
+      let measurementsArray = findTrapezoidMeasurements(leftRight, upDown);
 
-  let leftWall = new Wall(width/2 - long.centreX, long.centreY, long.distanceX,  long.distanceY);
-  let rightWall = new Wall(width/2 + long.centreX, long.centreY, long.distanceX, long.distanceY);
-  walls.push(leftWall);
-  walls.push(rightWall);
+      for(let measurements of measurementsArray){
+        let someShortTrapezoid = new TrapezoidWall(measurements.x, measurements.y, measurements.vertices);
+        walls.push(someShortTrapezoid);
 
-  let someShortTrapezoid = new TrapezoidWall(-1, -1, trapezoid);
-  walls.push(someShortTrapezoid);
-
-  for(let leftRight=-1; leftRight<=1; leftRight+=2){
-    for(let upDown = -1; upDown <=1; upDown +=2){
-      let someShortWall = new Wall(width/2 + leftRight*short.centreX, height/2 + upDown*short.centreY, short.distanceX, short.distanceY);
-      walls.push(someShortWall);
-      // let someShortTrapezoid = new TrapezoidWall(leftRight, upDown, trapezoid);
-      // walls.push(someShortTrapezoid);
+      }
     }
   }
   
   playerHasWon = false;
 }
+
+function findTrapezoidMeasurements(xSign, ySign){
+  let orientations = [horizontalTrapezoidMeasurments, verticalTrapezoidMeasurements];
+  let newMeasurementsArray = [];
+
+  for(let orientation of orientations){
+    x = width/2 + xSign*orientation.centre.x;
+    y = height/2 + ySign*orientation.centre.y;
+
+    let vertexArray = [];
+  
+    for (let vertexPair of orientation.vertices){
+      let adjustedX = width/2 + xSign*vertexPair.x;
+      let adjustedY = height/2 + ySign*vertexPair.y;
+  
+      let theObject = {
+        x: adjustedX,
+        y: adjustedY,
+      };
+
+      vertexArray.push(theObject);
+    }
+
+    let newMeasurements = {
+      vertices: vertexArray,
+      x: x,
+      y: y,
+    };
+
+    newMeasurementsArray.push(newMeasurements);
+  }
+
+  return newMeasurementsArray;
+}
+
+function createHoles(){
+  holes = [];
+
+  let verticalSpots = 3;
+  let horizontalSpots = 2;
+
+  for(let ix = 0; ix<verticalSpots; ix++){
+    for(let iy = 0.5; iy<horizontalSpots; iy++){
+
+      let x = width/2 + (ix-1)*HOLE_FAR_X;
+      let y = x !== width/2 ? height/2 + 2*(iy-1)*HOLE_FAR_Y: height/2 + 2*(iy-1)*(HOLE_FAR_Y+2.5*HOLE_RADIUS);
+
+      let someHole = new Hole(x, y);
+      holes.push(someHole);
+    }
+  }
+}
+
 function mousePressed(){
   let x = Math.abs(width/2-mouseX);
   let y = Math.abs(height/2-mouseY);
@@ -357,25 +416,28 @@ class Ball{
   constructor(x, y, id){
     this.x = x;
     this.y = y;
-    this.originalX = x;;
-    this.originalY = y;
     this.id = id;
+
     this.imageX = this.id%8*15;
     this.imageY = Math.floor(this.id/8)*15;
     this.imageW = 15;
+
     this.striped = this.id > 7 && this.id <15;
     this.eightBall = id === 7;
     this.cueBall = id === 15;
-    this.ballSinking = false;
-    this.ballSunk = false;
+
     this.r = BALL_RADIUS;
+
     this.options ={
       restitution: 0.8,
-      slop: 0.05,
       friction: 0.25,
     };
 
-    this.body = Bodies.circle(this.x, this.y, this.r, this.options);
+    this.body = Bodies.circle(this.x, this.y, this.r*0.95, this.options);
+    this.body.label = "ball";
+    this.body.ballSinking = false;
+    this.body.ballSunk = false;
+
     Composite.add(world, this.body);
 
     this.angle = this.body.angle;
@@ -394,7 +456,7 @@ class Ball{
   }
 
   update(){
-    if (!this.ballSinking) {
+    if (!this.body.ballSinking) {
       if (Math.abs(this.body.velocity.x) < 0.1 && Math.abs(this.body.velocity.y) < 0.1){
         let stationary = Vector.create(0, 0);
         Body.setVelocity(this.body, stationary);
@@ -405,7 +467,9 @@ class Ball{
       this.angle = this.body.angle;
     }
     else{
-      this.r -= 0.5;
+      this.x = 50;;
+      this.y = 50;
+      this.r = 50;
     }
   }
 
@@ -429,15 +493,10 @@ class Ball{
     return true;
   }
 
-  ballSinks() {
-    if (this.r > 0.5) {
-      this.ballSinking = true;
-    }
-    else {
-      this.ballSunk = true;
-      Composite.remove(world, this.body);
-    }
-  }
+  // sinkBall(){
+  //   this.body.ballSinking = true;
+  //   Composite.remove(world, this.body);
+  // }
 }
 
 class Cue{
@@ -537,64 +596,20 @@ class Cue{
 
 }
 
-class Wall{
-  constructor(x, y, w, h){
+class TrapezoidWall{
+  constructor(x, y, vertices){
     this.x = x;
     this.y = y;
-    this.w = w;
-    this.h = h;
+
+    this.vertices = vertices;
+    
     this.options ={
       isStatic: true,
-      restitution: 0.8,
-      slop: 0.1,
+      restitution: 1,
     };
 
-    this.x1 = x - w / 2;
-    this.y1 = y - h / 2;
-    this.x2 = x + w / 2;
-    this.y2 = y + h / 2;
-
-    this.body = Bodies.rectangle(this.x, this.y, this.w, this.h, this.options);
-    Composite.add(world, this.body);
-  }
-
-  show(){
-    push();
-    noStroke();
-    fill(255, 255, 255, 50);
-    rectMode(CENTER);
-    rect(this.x, this.y, this.w, this.h);
-    pop();
-  }
-}
-
-class TrapezoidWall{
-  constructor(xSign, ySign, vertexArray){
-
-    let newVertexArray = [];
-
-    for (let vertexPair of vertexArray){
-      let adjustedX = width/2 + xSign*vertexPair.x;
-      let adjustedY = height/2 + ySign*vertexPair.y;
-
-      let theObject = {
-        x: adjustedX,
-        y: adjustedY,
-      };
-
-      newVertexArray.push(theObject);
-    }
-
-    this.vertices = newVertexArray;
-    console.log(this.vertices);
-
-    this.options ={
-      isStatic: true,
-      restitution: 0.8,
-      slop: 0.1,
-    };
-
-    this.body = Bodies.fromVertices(this.vertices[0].x, this.vertices[0].y, this.vertices, this.options);
+    this.body = Bodies.fromVertices(this.x, this.y, this.vertices, this.options);
+    this.body.label = "wall";
     Composite.add(world, this.body);
   }
 
@@ -608,6 +623,32 @@ class TrapezoidWall{
       this.vertices[2].x, this.vertices[2].y,
       this.vertices[3].x, this.vertices[3].y,
     );
+    pop();
+  }
+}
+
+class Hole{
+  constructor(x, y){
+    this.x = x;
+    this.y = y;
+    this.r = HOLE_RADIUS;
+    
+    this.options = {
+      restitution: 0,
+      isStatic: true,
+    };
+
+    this.body = Bodies.circle(this.x, this.y, this.r, this.options);
+    this.body.label = "hole";
+
+    Composite.add(world, this.body);
+  }
+
+  show(){
+    push();
+    noStroke();
+    fill(255, 0, 0, 50);
+    circle(this.x, this.y, this.r*2);
     pop();
   }
 }
