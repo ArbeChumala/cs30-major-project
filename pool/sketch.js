@@ -111,16 +111,35 @@ function setup(){
 
 function collisionManager(event){
   let pairsArray = structuredClone(event.pairs);
-  console.log(pairsArray);
+
+  let ballHasSunk = false;
+  let sinkingBallIds = [];
+  let sinkingBallPositions = [];
 
   for(let pair of pairsArray){
     if(pair.bodyA.label === "hole" && pair.bodyB.label === "ball"){
-      pair.bodyB.ballSinking = true;
-      console.log("sinking");
+      sinkingBallIds.push(pair.bodyB.id);
+      sinkingBallPositions.push(pair.bodyA.position);
+      ballHasSunk = true;
     }
     else if (pair.bodyA.label === "ball" && pair.bodyB.label === "hole"){
-      pair.bodyA.ballSinking = true;
-      console.log("sinking");
+      sinkingBallIds.push(pair.bodyA.id);
+      sinkingBallPositions.push(pair.bodyB.position);
+      ballHasSunk = true;
+    }
+  }
+
+  if(ballHasSunk){
+    for(let ball of balls){
+      for(let i = 0; i<sinkingBallIds.length; i++){
+        if(ball.body.id === sinkingBallIds[i]){
+          ball.ballSinking = true;
+          Body.setPosition(ball.body, sinkingBallPositions[i]);
+          ball.desiredX = sinkingBallPositions[i].x;
+          ball.desiredY = sinkingBallPositions[i].y;
+          Body.setVelocity(ball.body, {x:0, y:0});
+        }
+      }
     }
   }
 }
@@ -151,15 +170,12 @@ function draw(){
       ball.drawShadow();
     }
     for (let ball of balls){
-      ball.update();
-      if(ball.body.ballSinking){
-        console.log("HECK");
-      }
-      ball.show();
       if (ball.cueBall){
         ballX = ball.body.position.x;
         ballY = ball.body.position.y;
       }
+      ball.update();
+      ball.show();
     }
 
     // checks if the cue should be shown and if the balls just stopped moving last frame
@@ -231,19 +247,19 @@ function ballOut(){
   let samePlayerAgain = false;
   for (let i = balls.length - 1; i >= 0; i --){
     console.log("looping");
-    if (balls[i].body.ballSunk){
+    if (balls[i].ballSunk){
 
       // if the ball is the cue call, sets a variable to true and tries to move it back to the middle, as well as switching the player
       // playing if it fell (works because it is always the last ball in the array)
       if (balls[i].cueBall){
         cueBallFallen = true;
-        let homeBase = Vector.create(width/2-100, height/2);
-
-        // balls[i].body.ballSinking = false;
-        // balls[i].body.ballSunk = false;
+        let homeBase = Vector.create(width/2-200, height/2);
 
         // Composite.add(world, balls[i].body);
         Body.setPosition(balls[i].body, homeBase);
+        balls[i].r = BALL_RADIUS;
+        balls[i].ballSinking = false;
+        balls[i].ballSunk = false;
 
         samePlayerAgain = false;
       }
@@ -265,7 +281,7 @@ function ballOut(){
           nonStripedPlayerBalls --;
         }
 
-        // Composite.remove(world, balls[i].body);
+        Composite.remove(world, balls[i].body);
         balls.splice(i, 1);
       }
     }
@@ -277,7 +293,7 @@ function ballOut(){
 
 function ballsMoving(){
   for (let ball of balls){
-    if (ball.isMoving()){
+    if (ball.isMoving() || ball.ballSinking){
       return true;
     }
   }
@@ -416,6 +432,10 @@ class Ball{
   constructor(x, y, id){
     this.x = x;
     this.y = y;
+
+    this.desiredX = x;
+    this.desiredY = y;
+
     this.id = id;
 
     this.imageX = this.id%8*15;
@@ -429,14 +449,15 @@ class Ball{
     this.r = BALL_RADIUS;
 
     this.options ={
-      restitution: 0.8,
+      restitution: 1,
       friction: 0.25,
     };
 
-    this.body = Bodies.circle(this.x, this.y, this.r*0.95, this.options);
+    this.body = Bodies.circle(this.x, this.y, this.r, this.options);
     this.body.label = "ball";
-    this.body.ballSinking = false;
-    this.body.ballSunk = false;
+
+    this.ballSinking = false;
+    this.ballSunk = false;
 
     Composite.add(world, this.body);
 
@@ -444,19 +465,23 @@ class Ball{
   }
 
   show(){
-    push();
-    translate(this.x, this.y);
-    rotate(this.angle);
-    noSmooth();
-    imageMode(CENTER);
-    tint(230);
-    image(ballGridImage, 0, 0, this.r*2, this.r*2, this.imageX, this.imageY, this.imageW, this.imageW);
-    noTint();
-    pop();
+    if(!this.ballSunk){
+      push();
+      translate(this.x, this.y);
+      rotate(this.angle);
+      noSmooth();
+      imageMode(CENTER);
+      let tintFactor = BALL_RADIUS - this.r;
+  
+      tint(230-10*tintFactor);
+      image(ballGridImage, 0, 0, this.r*2, this.r*2, this.imageX, this.imageY, this.imageW, this.imageW);
+      noTint();
+      pop();
+    }
   }
 
   update(){
-    if (!this.body.ballSinking) {
+    if (!this.ballSinking) {
       if (Math.abs(this.body.velocity.x) < 0.1 && Math.abs(this.body.velocity.y) < 0.1){
         let stationary = Vector.create(0, 0);
         Body.setVelocity(this.body, stationary);
@@ -467,9 +492,16 @@ class Ball{
       this.angle = this.body.angle;
     }
     else{
-      this.x = 50;;
-      this.y = 50;
-      this.r = 50;
+      if(this.r >0.5){
+        this.r -=0.5;
+        this.x = (this.desiredX +this.x)/2;
+        this.y = (this.desiredY + this.y)/2;
+      }
+
+      if(this.r <2){
+        this.ballSunk = true;
+        this.ballSinking = false;
+      }
     }
   }
 
@@ -481,7 +513,7 @@ class Ball{
   drawShadow(){
     smooth();
     tint(10, 50);
-    image(ballGridImage, this.x - SHADOW_OFFSET, this.y + SHADOW_OFFSET, BALL_RADIUS*2, BALL_RADIUS*2, this.imageX, this.imageY, this.imageW, this.imageW);
+    image(ballGridImage, this.x - SHADOW_OFFSET, this.y + SHADOW_OFFSET, this.r*2, this.r*2, this.imageX, this.imageY, this.imageW, this.imageW);
     noTint();
     noSmooth();
   }
@@ -493,10 +525,10 @@ class Ball{
     return true;
   }
 
-  // sinkBall(){
-  //   this.body.ballSinking = true;
-  //   Composite.remove(world, this.body);
-  // }
+  sinkBall(){
+    this.ballSinking = true;
+    Composite.remove(world, this.body);
+  }
 }
 
 class Cue{
@@ -616,7 +648,7 @@ class TrapezoidWall{
   show(){
     push();
     noStroke();
-    fill(255, 255, 255, 50);
+    fill(255, 255, 255, 0);
     quad(
       this.vertices[0].x, this.vertices[0].y, 
       this.vertices[1].x, this.vertices[1].y,
@@ -647,7 +679,7 @@ class Hole{
   show(){
     push();
     noStroke();
-    fill(255, 0, 0, 50);
+    fill(255, 0, 0, 0);
     circle(this.x, this.y, this.r*2);
     pop();
   }
