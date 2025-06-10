@@ -23,7 +23,7 @@ const BALL_RADIUS = 17;
 const SHADOW_OFFSET = 5;
 
 //measured from width/2 and height/2
-const H_FAR_TRAPEZOID_X = 460;
+const H_FAR_TRAPEZOID_X = 440;
 const H_MIDDLE_TRAPEZOID_X = 410;
 const H_CLOSE_TRAPEZOID_X = 30;
 const H_FAR_TRAPEZOID_Y = 260;
@@ -35,7 +35,7 @@ const V_FAR_TRAPEZOID_X = 500;
 const V_CLOSE_TRAPEZOID_X = 440;
 const V_MIDDLE_TRAPEZOID_Y = 160;
 const V_CLOSE_TRAPEZOID_Y = 0.5;
-const V_FAR_TRAPEZOID_Y = 220;
+const V_FAR_TRAPEZOID_Y = 200;
 
 let verticalTrapezoidMeasurements;
 
