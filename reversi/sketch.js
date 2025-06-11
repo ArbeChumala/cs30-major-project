@@ -105,12 +105,12 @@ function setup(){
   userInput.center("horizontal");
 
   botModeButton = createButton('Play With A Bot');
-  botModeButton.position(width/2, height/2+125);
+  botModeButton.position(width/2, height/2+100);
   botModeButton.center("horizontal");
   botModeButton.mousePressed(startBotMode);
 
   sameScreenButton = createButton('Play Locally With A Friend');
-  sameScreenButton.position(width/2, height/2+225);
+  sameScreenButton.position(width/2, height/2+175);
   sameScreenButton.center("horizontal");
   sameScreenButton.mousePressed(startPlayerMode);
 

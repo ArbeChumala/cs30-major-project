@@ -25,7 +25,7 @@ let squareWidth = 450;
 let hostStatus;
 let playerCanJoin = true;
 
-let playersReady = 0;
+let playersReady = [];
 
 let bluePenguinCount = 0;
 let blackPenguinCount = 0;
@@ -137,7 +137,7 @@ function keyPressed(){
     startParty();
   }
   else if(myRoom && key === "p"){
-    partyEmit("playerReady");
+    partyEmit("playerReady", {player: hostStatus});
   }
   else if (myRoom && key === "r"){
     partyEmit("setupGame");
@@ -255,7 +255,7 @@ function setupGame(){
   Composite.clear(world);
   penguins = [];
   arrows = [];
-  playersReady = 0;
+  playersReady = [];
 
   hostStatus = partyIsHost() ? "host" : "guest";
 
@@ -291,15 +291,22 @@ function setupGame(){
   loop();
 }
 
-function playerReady(){
-  playersReady ++;
+function playerReady(dataObject){
+  if(playersReady.length === 0){
+    playersReady.push(dataObject.player);
+  }
+  else if(playersReady.length === 1){
+    if(playersReady[0] !== dataObject.player){
+      playersReady.push(dataObject.player);
+    }
+  }
 
-  if(playersReady === 2){
+  if(playersReady.length === 2){
     if(!partyIsHost()){
       partySetShared(shared, {velocities: [0, 0, 0, 0, 0, 0, 0, 0]});
       guestSendVelocities();
     }
-    playersReady = 0;
+    playersReady = [];
   }
 }
 
