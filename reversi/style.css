@@ -1,6 +1,7 @@
 canvas {
   display: block;
 }
+
 html, body {
   margin: 0;
   padding: 0;
@@ -12,12 +13,46 @@ canvas {
   display: flex;
 }
 
-input{
+button {
   padding:1%;
-  align-self: center;
   font-family: 'Poppins';
   border-radius: 10px;
+  background-color: #1b7059;
   border-style: hidden;
+  font-weight: bold;
+  color: white;
+  font-size:15px;
+  margin:0px;
+  width:300px;
+}
+
+button:hover {
+  padding:1%;
+  font-family: 'Poppins';
+  border-radius: 10px;
+  background-color: rgb(40, 74, 65);
+  border-style: hidden;
+  font-weight: bold;
+}
+
+input{
+  padding-left:0px;
+  padding-right:0px;
+  padding-top: 10px;
+  padding-bottom:10px;
+  margin:0px;
+  width:300px;
+  text-align:center;
+  font-family: 'Poppins';
+  border-radius: 10px;
+  font-size: 20px;
+  color: #1b7059;
+  border-style: hidden;
+  font-weight: bold;
+}
+
+input:hover{
+  background-color: #dddddd;
 }
 
 @font-face {

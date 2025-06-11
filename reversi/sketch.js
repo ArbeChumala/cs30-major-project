@@ -26,7 +26,7 @@ let gameOver = false;
 let currentPlayer = WHITE;
 let whiteTileCount = 2;
 let blackTileCount = 2;
-let mode = "pvp";
+let mode;
 let timerStarted = false;
 
 let currentClickX;
@@ -89,24 +89,31 @@ function preload(){
 function setup(){
   noLoop();
   setupCanvas();
-
   
   background("#43AA8B");
 
   textSize(100);
   textFont(poppins);
   fill(255);
-  text("Reversi", width/2, height/2 - 100);
+  text("Reversi", width/2, height/2 - 150);
 
   textSize(40);
-  text("JOIN ROOM", width/2, height/2);
+  text("Enter A Room", width/2, height/2);
 
   userInput = createInput('main');
   userInput.position(width/2, height/2+25);
   userInput.center("horizontal");
 
-  textSize(40);
-  text("BOT MODE", width/2, height/2+200);
+  botModeButton = createButton('Play With A Bot');
+  botModeButton.position(width/2, height/2+125);
+  botModeButton.center("horizontal");
+  botModeButton.mousePressed(startBotMode);
+
+  sameScreenButton = createButton('Play Locally With A Friend');
+  sameScreenButton.position(width/2, height/2+225);
+  sameScreenButton.center("horizontal");
+  sameScreenButton.mousePressed(startPlayerMode);
+
 }
 
 function windowResized(){
@@ -115,8 +122,8 @@ function windowResized(){
 }
 
 function draw(){
-  if(myRoom){
-    background(27, 117, 92);
+  if(myRoom || mode){
+    background("#43AA8B");
     startBotTimer();
     setCursor();
     displayGrid();
@@ -126,19 +133,14 @@ function draw(){
 }
 
 function keyPressed(){
-  if(myRoom){
-    //switches the mode
-    if (key === "p" && mode === "pvb"){
-      resetGame();
-      mode = "pvp";
-    }
-    else if (key === "b" && mode === "pvp"){
-      resetGame();
-      mode = "pvb";
-    }
-    else if (key === "r"){
-      partyEmit("resetGame");
-      resetGame();
+  if(myRoom || mode){
+    if (key === "r"){
+      if(myRoom){
+        partyEmit("resetGame");
+      }
+      else{
+        resetGame();
+      }
     }
   }
   else{
@@ -149,22 +151,26 @@ function keyPressed(){
 }
 
 function mousePressed(){
-  if(myRoom){
-    //plays music on first click
-    if (!jazzMusic.isPlaying()){
-      jazzMusic.loop();
-    }
+  //finds the x and y coordinates (with respect to the grid cells) of the mouse
+  let playerX = Math.floor((mouseX-startingMouseX)/gridUnit);
+  let playerY = Math.floor((mouseY-startingMouseY)/gridUnit);
+
+  if (myRoom && mode && !jazzMusic.isPlaying()){
+    jazzMusic.loop();
+  }
   
-    //finds the x and y coordinates (with respect to the grid cells) of the mouse
-    let playerX = Math.floor((mouseX-startingMouseX)/gridUnit);
-    let playerY = Math.floor((mouseY-startingMouseY)/gridUnit);
-  
-    //either the mode is pvp and either colour can play by clicking, or it is against the bot and only black can play by clicking
-    if(mode === "pvp" && (currentPlayer === BLACK && partyIsHost() || currentPlayer === WHITE && !partyIsHost())){
-      if (playerX >=0 && playerX <GRID_DIMENSIONS && playerY >= 0 && playerY < GRID_DIMENSIONS){
+  if (playerX >=0 && playerX <GRID_DIMENSIONS && playerY >= 0 && playerY < GRID_DIMENSIONS){
+    if(myRoom){
+      if(currentPlayer === BLACK === partyIsHost()){
         shared.playerX = playerX;
         shared.playerY = playerY;
       }
+    }
+    else if (mode === "pvp"){
+      playerMoves({playerX: playerX, playerY: playerY});
+    }
+    else if (mode === "pvb" && currentPlayer === BLACK){
+      playerMoves({playerX: playerX, playerY: playerY});
     }
   }
 }
@@ -184,9 +190,21 @@ function startParty(){
   shared = partyLoadShared("shared", {playerX: undefined, playerY: undefined}, resetGame);
 }
 
+function startBotMode(){
+  mode = "pvb";
+  resetGame();
+}
+
+function startPlayerMode(){
+  mode = "pvp";
+  resetGame();
+}
+
 function resetGame(){
   //resets the game board
-  partyWatchShared(shared, playerMoves, true);
+  if(myRoom){
+    partyWatchShared(shared, playerMoves, true);
+  }
   grid = generateStartGrid();
   drawingGrid = structuredClone(grid);
   gameOver = false;
@@ -461,7 +479,7 @@ function botMoves(){
     }
     
     //sends its final move and restarts the timer boolean
-    playerMoves(botX, botY);
+    playerMoves({playerX: botX, playerY: botY});
     timerStarted = false;
   }
 
@@ -524,7 +542,11 @@ function displayGrid(){
       }
 
       //will only display the possible moves (50% opacity) if the player is a human
-      if (movesArray[y][x] && (mode === "pvp" || currentPlayer === BLACK)){
+      if (movesArray[y][x] && 
+          ( mode === "pvp" || 
+            mode === "pvb" && currentPlayer === BLACK || 
+            myRoom && partyIsHost() === (currentPlayer === BLACK)
+          )){
         let theImage = currentPlayer - 1 ? blackGhostTile: whiteGhostTile;
         image(theImage,startingImageX+x*gridUnit, startingImageY+y*gridUnit, theImage.width*resizingRatio, theImage.height*resizingRatio);
       }
@@ -585,7 +607,10 @@ function setCursor(){
   let y = Math.floor((mouseY-startingMouseY)/gridUnit);
 
   //if the mouse is on a tile that can be played, the cursor changes to a hand
-  if (y<GRID_DIMENSIONS && y>=0 && x<GRID_DIMENSIONS && x>=0 && movesArray[y][x]&&(currentPlayer === BLACK || mode === "pvp")){
+  if (y<GRID_DIMENSIONS && y>=0 && x<GRID_DIMENSIONS && x>=0 && movesArray[y][x]&&
+      (myRoom && (partyIsHost() === (currentPlayer === BLACK) ||
+      mode === "pvp" ||
+      mode === "pvb" && currentPlayer === BLACK))){
     cursor(HAND);
   }
   else{
