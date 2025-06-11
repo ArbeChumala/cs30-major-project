@@ -123,6 +123,7 @@ function windowResized(){
 
 function draw(){
   if(myRoom || mode){
+    textFont(gameFont);
     background("#43AA8B");
     startBotTimer();
     setCursor();
@@ -577,14 +578,7 @@ function displayScore(){
   }
 
   //displays some instructions
-  if(mode === "pvp"){
-    textSize(15);
-    text("Press B to switch to Player versus Bot Mode", width/2, height-20);
-  }
-  else if(mode === "pvb"){
-    textSize(15);
-    text("Press P to switch to Player versus Player Mode", width/2, height-20);
-  }
+  textSize(15);
   text("Press R to Reset", width/2, height-40);
 }
 
