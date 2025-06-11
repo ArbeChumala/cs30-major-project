@@ -23,8 +23,12 @@ let arrows = [];
 let squareWidth = 450;
 
 let hostStatus;
+let playerCanJoin = true;
 
 let playersReady = 0;
+
+let bluePenguinCount = 0;
+let blackPenguinCount = 0;
 
 let poppins;
 let blackPenguinImg;
@@ -34,6 +38,8 @@ let penguinShadowImg;
 let iceShadowImg;
 let blackArrowHeadImg;
 let blueArrowHeadImg;
+let boingSound;
+let splashSound;
 
 let shared;
 
@@ -59,6 +65,8 @@ function preload(){
   iceShadowImg = loadImage("assets/images/ice-shadow.png");
   blackArrowHeadImg = loadImage("assets/images/black-arrow-head.png");
   blueArrowHeadImg = loadImage("assets/images/blue-arrow-head.png");
+  boingSound = loadSound("assets/sounds/boing.mp3");
+  splashSound = loadSound("assets/sounds/splash.m4a");
 }
 
 function setup(){
@@ -68,41 +76,43 @@ function setup(){
   createCanvas(windowWidth, windowHeight);
   userInput = createInput('main');
   userInput.center();
-  background(141, 178, 196);
+  background(theColour);
   textSize(100);
   textAlign(CENTER);
   textFont(poppins);
   fill(255);
   text("Join Room", width/2, height/2 - 100);
-  Events.on(engine, "collisionStart", sendMessage);
+  Events.on(engine, "collisionStart", penguinsCollided);
 }
 
 function draw(){
   if(myRoom){
-    background(theColour);
-    rectMode(CENTER);
-    noStroke();
+    if(partyLoadGuestShareds().length === 2){
+      background(theColour);
+      rectMode(CENTER);
+      noStroke();
+      noSmooth();
     
-    noSmooth();
-    
-    image(iceShadowImg, width/2 - SHADOW_OFFSET*5*0.5, height/2+5*(squareWidth/120) + SHADOW_OFFSET*5, squareWidth, squareWidth*1.1 + 1.1*10*(squareWidth/120));
-
-    image(iceImg, width/2, height/2+5*(squareWidth/120), squareWidth, squareWidth + 10*(squareWidth/120));
+      image(iceShadowImg, width/2 - SHADOW_OFFSET*5*0.5, height/2+5*(squareWidth/120) + SHADOW_OFFSET*5, squareWidth, squareWidth*1.1 + 1.1*10*(squareWidth/120));
+      image(iceImg, width/2, height/2+5*(squareWidth/120), squareWidth, squareWidth + 10*(squareWidth/120));
   
-    for(i = penguins.length - 1; i>=0; i--){
-      penguins[i].show();
-  
-      if(penguins[i].isDead()){
-        Composite.remove(world, penguins[i].body);
-        
-        if(penguins[i].team === hostStatus){
-          index = arrows.indexOf(penguins[i].arrow);
-          arrows.splice(index, 1);
-        }
-
-        penguins.splice(i, 1);
-      }
+      determineScore();
+      displayScore();
+      displayPenguins();
+      determineWinner();
     }
+    else if(partyLoadGuestShareds().length ===1){
+      background(theColour);
+      textSize(100);
+      text("Join Room", width/2, height/2 - 100);
+      textSize(30);
+      text("Waiting for a friend...", width/2, height/2);
+    }
+  }
+  if(!playerCanJoin){
+    background("#445f6e");
+    textSize(30);
+    text("Sorry, only two to a room... You snooze, you lose", width/2, height/2);
   }
 }
 
@@ -137,8 +147,86 @@ function keyPressed(){
 //-----------------------------------------------------------------------------------------------
 //functions called by other functions
 //-----------------------------------------------------------------------------------------------
-function sendMessage(event){
-  console.log(event);
+function penguinsCollided(){
+  boingSound.play();
+}
+
+function displayPenguins(){
+  for(i = penguins.length - 1; i>=0; i--){
+    penguins[i].show();
+
+    if(penguins[i].isDead()){
+      splashSound.play();
+      Composite.remove(world, penguins[i].body);
+      
+      if(penguins[i].team === hostStatus){
+        index = arrows.indexOf(penguins[i].arrow);
+        arrows.splice(index, 1);
+      }
+
+      penguins.splice(i, 1);
+    }
+  }
+}
+
+function determineScore(){
+  bluePenguinCount = 0;
+  blackPenguinCount = 0;
+
+  for(let penguin of penguins){
+    if(penguin.team === "guest"){
+      blackPenguinCount ++;
+    }
+    else{
+      bluePenguinCount++;
+    }
+  }
+}
+
+function displayScore(){
+  //displays the title and objective
+  textSize(70);
+  text("Knockout", width/2, 100);
+  textSize(15);
+  text("Drown your opponents!", width/2, 130);
+
+  //displays the score for each player
+  textSize(40);
+  text(bluePenguinCount, width/2+squareWidth, height/2+75);
+  text(blackPenguinCount, width/2-squareWidth, height/2+75);
+
+  //the tile that is opaque will indicate the current player
+  if (hostStatus === "host"){
+    tint(250, 100);
+    image(blackPenguinImg, width/2-squareWidth, height/2-50, bluePenguinImg.width*PIXEL_RATIO*2, bluePenguinImg.width*PIXEL_RATIO*2);
+    noTint();
+    image(bluePenguinImg, width/2+squareWidth, height/2-50, blackPenguinImg.width*PIXEL_RATIO*2, bluePenguinImg.width*PIXEL_RATIO*2);
+  }
+  else{
+    noTint();
+    image(blackPenguinImg, width/2-squareWidth, height/2-50, bluePenguinImg.width*PIXEL_RATIO*2, bluePenguinImg.width*PIXEL_RATIO*2);
+    tint(250, 100);
+    image(bluePenguinImg, width/2+squareWidth, height/2-50, blackPenguinImg.width*PIXEL_RATIO*2, bluePenguinImg.width*PIXEL_RATIO*2);
+    noTint();
+  }
+
+  //displays some instructions
+  textSize(15);
+  text("Press R to Reset", width/2, height-40);
+}
+
+function determineWinner(){
+  if(penguinsStationary()){
+    if(!bluePenguinCount && blackPenguinCount){
+      console.log("black penguin wins");
+    }
+    else if(bluePenguinCount && !blackPenguinCount){
+      console.log("blue penguin wins");
+    }
+    else if (!bluePenguinCount && !blackPenguinCount){
+      console.log("tie");
+    }
+  }
 }
 
 function startParty(){
@@ -148,6 +236,7 @@ function startParty(){
     "our-amazing-knockout-game", 
     myRoom,
   );
+
   
   partySubscribe("setupGame", setupGame);
   partySubscribe("playerReady", playerReady);
@@ -185,6 +274,17 @@ function setupGame(){
       let somePenguin = new Penguin(x, y, team, i);
       penguins.push(somePenguin);
     }
+  }
+
+  textFont(poppins);
+
+  if(partyLoadGuestShareds().length <2){
+    partyLoadMyShared({name: myRoom});
+  }
+  else{
+    playerCanJoin = false;
+    myRoom = false;
+    partyDisconnect();
   }
 
   removeElements();
