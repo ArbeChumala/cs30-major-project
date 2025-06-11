@@ -34,6 +34,9 @@ const BUTTON_GAP = 20;
 const PLAYER_ONE = -1;
 const PLAYER_TWO = -2;
 
+let currentPlayer = PLAYER_ONE;
+
+
 let yourPlayer;
 
 const PIXEL_RATIO = 8*SQUARE_DIMENSIONS/151;
@@ -83,7 +86,7 @@ function setup(){
 }
 
 function draw(){
-  if(myRoom){
+  if(myRoom || mode){
     background("#948d8a");
     displayTiles();
     displayFrame();
@@ -110,10 +113,12 @@ function mousePressed(){
 
 function startBotMode(){
   mode = "pvb";
+  setupGame();
 }
 
 function startPlayerMode(){
   mode = "pvp";
+  setupGame();
 }
 
 function startParty(){
@@ -147,20 +152,32 @@ function setupGame(){
     let someDisplayer = new ScoreDisplayer(-(i+1));
     scoreDisplayers.push(someDisplayer);
   }
-  yourPlayer = partyIsHost() ? PLAYER_ONE : PLAYER_TWO;
-  grid = setupGrid(shared.colourSequence, true);
+
+  if(myRoom){
+    yourPlayer = partyIsHost() ? PLAYER_ONE : PLAYER_TWO;
+    grid = setupGrid(shared.colourSequence, true);
+  }
+  else if (mode){
+    let theSequence = generateColourSequence();
+    grid = setupGrid(theSequence, true);
+  }
 
   removeElements();
   loop();
 }
 
 function toggleCurrentPlayer(){
-  shared.currentPlayer = shared.currentPlayer === PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
+  if(myRoom){
+    shared.currentPlayer = shared.currentPlayer === PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
+  }
+  else if(mode){
+    currentPlayer = currentPlayer === PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
+  }
 }
 
 function botMoves(){
   let mostPoints = 0;
-  let winningIndex = 0;
+  let winningIndex;
 
   for(let i = 0; i<colourArray.length; i++){
     if(i !== playerOneColour){
@@ -172,7 +189,7 @@ function botMoves(){
       for(let iy = 0; iy<GAME_HEIGHT; iy++){
         for(let ix = 0; ix<GAME_WIDTH; ix++){
   
-          if(fakeGrid[y][x] === PLAYER_TWO){
+          if(fakeGrid[iy][ix] === PLAYER_TWO){
             points++;
           }
   
@@ -192,7 +209,7 @@ function botMoves(){
 function playerMoves(object){
   desiredColour = object.colour;
 
-  if(object.currentPlayer === PLAYER_ONE){
+  if(object.player === PLAYER_ONE){
     playerOneColour = desiredColour;
     changeBoxes(0, GAME_HEIGHT-1, grid);
     checkedSpaces = [];
@@ -212,14 +229,27 @@ function playerMoves(object){
 
 function changeBoxes(x, y, myGrid){
   if(x < GAME_WIDTH && x >=0 && y<GAME_HEIGHT && y>=0){
-    if(myGrid[y][x] === shared.currentPlayer && !checkedSpaces.includes(`${x}${y}`)){
-      checkedSpaces.push(`${x}${y}`);
-      changeNeighbours(x, y);
+    if(myRoom){
+      if(myGrid[y][x] === shared.currentPlayer && !checkedSpaces.includes(`${x}${y}`)){
+        checkedSpaces.push(`${x}${y}`);
+        changeNeighbours(x, y, myGrid);
+      }
+      else if (myGrid[y][x] === desiredColour){
+        checkedSpaces.push(`${x}${y}`);
+        myGrid[y][x] = shared.currentPlayer;
+        changeNeighbours(x, y, myGrid);
+      }
     }
-    else if (myGrid[y][x] === desiredColour){
-      checkedSpaces.push(`${x}${y}`);
-      myGrid[y][x] = shared.currentPlayer;
-      changeNeighbours(x, y, myGrid);
+    else if(mode){
+      if(myGrid[y][x] === currentPlayer && !checkedSpaces.includes(`${x}${y}`)){
+        checkedSpaces.push(`${x}${y}`);
+        changeNeighbours(x, y, myGrid);
+      }
+      else if (myGrid[y][x] === desiredColour){
+        checkedSpaces.push(`${x}${y}`);
+        myGrid[y][x] = currentPlayer;
+        changeNeighbours(x, y, myGrid);
+      }
     }
   }
 }
@@ -391,16 +421,27 @@ class Button{
   }
 
   checkIfPressed(){
-    if(this.isSelectable && 
+    if(myRoom && this.isSelectable && 
         shared.currentPlayer === yourPlayer &&
         Math.abs(this.x - mouseX) < BUTTON_WIDTH/2 && 
         Math.abs(this.y - mouseY) < BUTTON_WIDTH/2){
 
-      partyEmit("play", {
-        colour: this.colourIndex,
-        player: shared.currentPlayer,
-      });
+      if(myRoom){
+        partyEmit("play", {
+          colour: this.colourIndex,
+          player: shared.currentPlayer,
+        });
+      }
       this.gradientTime = true;
+    }
+
+    else if(this.isSelectable && mode &&  
+            Math.abs(this.x - mouseX) < BUTTON_WIDTH/2 && 
+            Math.abs(this.y - mouseY) < BUTTON_WIDTH/2){
+      playerMoves({
+        colour: this.colourIndex,
+        player: currentPlayer,
+      });
     }
   }
 }
@@ -442,16 +483,26 @@ class ScoreDisplayer{
   }
 
   updateSize(){
-    if(shared.currentPlayer === this.player && this.size < SCORE_BOX_WIDTH){
-      this.size ++;
+    if(myRoom){
+      if(shared.currentPlayer === this.player && this.size < SCORE_BOX_WIDTH){
+        this.size ++;
+      }
+      else if(shared.currentPlayer !== this.player && this.size > 0.7*SCORE_BOX_WIDTH){
+        this.size--;
+      }
     }
-    else if(shared.currentPlayer !== this.player && this.size > 0.7*SCORE_BOX_WIDTH){
-      this.size--;
+    else if(mode){
+      if(currentPlayer === this.player && this.size < SCORE_BOX_WIDTH){
+        this.size ++;
+      }
+      else if(currentPlayer !== this.player && this.size > 0.7*SCORE_BOX_WIDTH){
+        this.size--;
+      }
     }
   }
 
   updateScore(){
-    if(shared.currentPlayer === this.player){
+    if(myRoom && shared.currentPlayer === this.player || mode && currentPlayer === this.player){
       let score = 0;
   
       for(let y = 0; y<GAME_HEIGHT; y++){
