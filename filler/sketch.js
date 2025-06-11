@@ -180,7 +180,7 @@ function botMoves(){
   let winningIndex;
 
   for(let i = 0; i<colourArray.length; i++){
-    if(i !== playerOneColour){
+    if(i !== playerOneColour && i !== playerTwoColour){
       
       fakeGrid = structuredClone(grid);
       let points = 0;
