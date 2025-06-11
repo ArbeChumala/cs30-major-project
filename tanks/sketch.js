@@ -6,7 +6,7 @@
 // - describe what you did to take this project "above and beyond"
 
 const PADWIDTH = 600;
-const TOWERHEIGHT = 600;
+const TOWERHEIGHT = 400;
 const TANKWIDTH = 75;
 const TANKHEIGHT = 50;
 
@@ -19,6 +19,7 @@ let playerOnePlaying = true;
 let theArrow;
 let theBullet;
 let powerScale;
+let bulletStopped = false;
 
 let playerOneSideHeightFactor;
 let playerTwoSideHeightFactor;
@@ -48,6 +49,7 @@ class CollisionZone {
 
     let options = {
       isStatic: true,
+      friction: 0.8,
     };
 
     this.body = Bodies.rectangle(this.x, this.y, this.w, this.h, options);
@@ -111,6 +113,9 @@ function draw() {
     theBullet.update();
     theBullet.show();
   }
+  if (bulletStopped) {
+    nextPlayersTurn();
+  }
 }
 
 function mouseDragged() {
@@ -147,14 +152,14 @@ function turnsRed(event) {
 
       // play sound here
 
+
       // this is where an explosion thingy would make sense
       if (notTheBall === playerOneTank.body.id) {
         playerOneTank.livesRemaining --;
+        nextPlayersTurn();
       }
       else if (notTheBall === playerOneTank.body.id) {
         playerTwoTank.livesRemaining --;
-      }
-      if (notTheBall !== tower.body.id) {
         nextPlayersTurn();
       }
     }
@@ -166,15 +171,19 @@ function turnsRed(event) {
 // ----------------------------------------------------------------------------------------------
 
 function nextPlayersTurn() {
+  bulletStopped = false;
   Composite.remove(world, theBullet.body);
+  bulletExists = false;
   playerOnePlaying = !playerOnePlaying;
   if (playerOnePlaying) {
     theArrow = new Arrow(playerOneTank.x, playerOneTank.y);
     currentSideHeightFactor = playerOneSideHeightFactor;
+    powerScale.updateLocation(playerOneTank.x, playerOneTank.y + (height - playerOneTank.y) / 2, playerOneTank.colour);
   }
   else {
     theArrow = new Arrow(playerTwoTank.x, playerTwoTank.y);
     currentSideHeightFactor = playerTwoSideHeightFactor;
+    powerScale.updateLocation(playerTwoTank.x, playerTwoTank.y + (height - playerTwoTank.y) / 2, playerTwoTank.colour);
   }
 }
 
@@ -202,7 +211,11 @@ class Bullet {
     this.inclinationAngle = angle;
     this.power = power / 5;
 
-    this.body = Bodies.circle(this.x, this.y, this.r);
+    let options = {
+      friction: 0.8,
+    };
+
+    this.body = Bodies.circle(this.x, this.y, this.r, options);
     Composite.add(world, this.body);
 
     this.rotationAngle = this.body.angle;
@@ -225,10 +238,17 @@ class Bullet {
   }
 
   update() {
-    this.x = this.body.position.x;
-    this.y = this.body.position.y;
-    this.rotationAngle = this.body.angle;
-    Body.applyForce(this.body, {x: width/2, y: height/2}, {x: windSpeed, y:0});
+    if (Math.abs(this.body.velocity.x) < 0.1 && Math.abs(this.body.velocity.y) < 0.1){
+      let stationary = Vector.create(0, 0);
+      Body.setVelocity(this.body, stationary);
+      bulletStopped = true;
+    }
+    else {
+      this.x = this.body.position.x;
+      this.y = this.body.position.y;
+      this.rotationAngle = this.body.angle;
+      Body.applyForce(this.body, {x: width/2, y: height/2}, {x: windSpeed, y:0});
+    }
   }
 
   launch() {
@@ -328,6 +348,13 @@ class PowerScale {
         this.barX = x;
       }
     }
+  }
+
+  updateLocation(x, y, colour) {
+    this.x = x;
+    this.y = y;
+    this.colour = colour;
+    this.barX = x;
   }
 
   returnPower() {
