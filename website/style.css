@@ -95,6 +95,13 @@ td img{
     border-radius: 30px;
     object-fit: cover;
     width: 100%;
+    opacity:100%;
+    transition-duration:1s;
+}
+
+td img:hover{
+    opacity:50%;
+    transition-duration:1s;
 }
 
 a{
@@ -124,7 +131,6 @@ h2 a:hover, li a:hover{
 .movieinfo{
     width: 300px;
     font-style: normal;
-    font-family: 'Poppins';
 }
 
 .bignumber{
