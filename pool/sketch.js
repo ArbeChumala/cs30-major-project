@@ -25,7 +25,7 @@ const BALL_RADIUS = 17*POOL_TABLE_HALF_WIDTH/500;
 const SHADOW_OFFSET = 5;
 const SCORE_BALL_RADIUS = 30;
 
-//measured from width/2 and height/2
+//defining constants measured from width/2 and height/2
 const H_FAR_TRAPEZOID_X = 440*POOL_TABLE_HALF_WIDTH/500;
 const H_MIDDLE_TRAPEZOID_X = 410*POOL_TABLE_HALF_WIDTH/500;
 const H_CLOSE_TRAPEZOID_X = 30*POOL_TABLE_HALF_WIDTH/500;
@@ -45,6 +45,7 @@ let verticalTrapezoidMeasurements;
 const HOLE_FAR_X = 460*POOL_TABLE_HALF_WIDTH/500;
 const HOLE_FAR_Y = 220*POOL_TABLE_HALF_WIDTH/500;
 
+// defining variables, including state vairables and arrays
 let balls = [];
 let walls = [];
 let holes = [];
@@ -71,6 +72,7 @@ let ballImg;
 
 let pixelRatio;
 
+// preload assets
 function preload(){
   poolTableImg = loadImage("assets/images/pool-tabeel.png");
   ballGridImage = loadImage("assets/images/balls.png");
@@ -79,6 +81,7 @@ function preload(){
   sinkingSound = loadSound("assets/sounds/ball-sinking.mp3");
 }
 
+// create canvas and set trapezoid measurements, as well as initializing collisionStarted event
 function setup(){
   createCanvas(windowWidth, windowHeight);
   console.log(poolTableImg.width);
@@ -115,6 +118,7 @@ function setup(){
   createGame();
 }
 
+// manages response to collisions based on collisionStarted event, including balls sinking and sounds
 function collisionManager(event){
   let pairsArray = structuredClone(event.pairs);
   let ballHasSunk = false;
@@ -310,6 +314,7 @@ function ballOut(){
   }
 }
 
+// checks if there are any balls in motion
 function ballsMoving(){
   for (let ball of balls){
     if (ball.isMoving() || ball.ballSinking){
@@ -319,6 +324,7 @@ function ballsMoving(){
   return false;
 }
 
+// creates balls in triangle formation at start of new game
 function createBalls(){
   for(let i = 0; i<15; i++){
     let index;
@@ -352,12 +358,14 @@ function findColumn(n){
   }
 }
 
+// find the x value for a column of balls
 function findX(column){
   let startingX = width/2 + 100;
   let horizontalGap = sqrt(3)*BALL_RADIUS;
   return startingX + horizontalGap*column;
 }
 
+// finds y value for a column of balls
 function findY(n, column){
   let startingY = height/2;
   let firstOfRow = column*(column-1)/2;
@@ -366,6 +374,7 @@ function findY(n, column){
   return startingY +(column-1)*BALL_RADIUS - placement*2*BALL_RADIUS;
 }
 
+// creates pool table boundaries
 function createBoundaries(){
   walls = [];
 
@@ -385,6 +394,7 @@ function createBoundaries(){
   playerHasWon = false;
 }
 
+// arbe should comment this
 function findTrapezoidMeasurements(xSign, ySign){
   let orientations = [horizontalTrapezoidMeasurments, verticalTrapezoidMeasurements];
   let newMeasurementsArray = [];
@@ -419,6 +429,7 @@ function findTrapezoidMeasurements(xSign, ySign){
   return newMeasurementsArray;
 }
 
+// arbe should comment this
 function createHoles(){
   holes = [];
 
@@ -437,12 +448,14 @@ function createHoles(){
   }
 }
 
+// arbe should comment this
 function createScoreDisplayers(){
   let stripedScoreDisplayer = new ScoreDisplayer(width/2-(POOL_TABLE_HALF_WIDTH + 100), height/2, "striped");
   let solidScoreDisplayer = new ScoreDisplayer(width/2+(POOL_TABLE_HALF_WIDTH + 100), height/2, "solid");
   scoreDisplayers = [stripedScoreDisplayer, solidScoreDisplayer];
 }
 
+// arbe should comment this
 function mousePressed(){
   let x = Math.abs(width/2-mouseX);
   let y = Math.abs(height/2-mouseY);
@@ -463,6 +476,7 @@ class Ball{
 
     this.id = id;
 
+    // comment this shit broski
     this.imageX = this.id%8*15;
     this.imageY = Math.floor(this.id/8)*15;
     this.imageW = 15;
@@ -489,6 +503,7 @@ class Ball{
     this.angle = this.body.angle;
   }
 
+  // if the ball is still in play, shows the ball
   show(){
     if(!this.ballSunk){
       push();
@@ -505,6 +520,7 @@ class Ball{
     }
   }
 
+  // if the ball is sinking reduces its radius then sets ballSunk to be true, otherwise updates position
   update(){
     if (!this.ballSinking) {
       if (Math.abs(this.body.velocity.x) < 0.1 && Math.abs(this.body.velocity.y) < 0.1){
@@ -530,11 +546,13 @@ class Ball{
     }
   }
 
+  // arbeeeeeeee
   changeVelocity(distanceX, distanceY){
     this.velocity = Vector.create(distanceX, distanceY);
     Body.setVelocity(this.body, this.velocity);
   }
 
+  // arbeeeeeeee
   drawShadow(){
     smooth();
     tint(10, 50);
@@ -543,6 +561,7 @@ class Ball{
     noSmooth();
   }
 
+  // checks if the ball is moving
   isMoving(){
     if (this.body.velocity.x === 0 && this.body.velocity.y === 0){
       return false;
@@ -550,6 +569,7 @@ class Ball{
     return true;
   }
 
+  // removes the ball's body if it is sinking
   sinkBall(){
     this.ballSinking = true;
     Composite.remove(world, this.body);
@@ -579,6 +599,7 @@ class Cue{
     this.justStoppedMoving = false;
   };
 
+  // updates the location of the cue
   update(newBallX, newBallY){
     this.ballY = newBallY;
     this.ballX = newBallX;
@@ -586,6 +607,7 @@ class Cue{
     this.distance = dist(this.x, this.y, this.ballX, this.ballY);
     this.strikeDistance = dist(this.strikeX, this.strikeY, this.ballX, this.ballY);
 
+    // if the cue has been released and is moving towards the cue ball, approaches the cue ball in a straight line stoppen when it is struck
     if (this.movingIn){
       this.x -= this.strikeRatio * this.distanceX / cueSpeedFactor;
       this.y -= this.strikeRatio * this.distanceY / cueSpeedFactor;
@@ -602,6 +624,8 @@ class Cue{
         }
       }
     }
+
+    // follows the mouse if pressed and if the mouse is within 50 pixels along x and y of the tip of the cue
     else if (mouseIsPressed && mouseX < this.x + 25 && mouseX > this.x - 25 && mouseY > this.y - 25 && mouseY < this.y + 25 &&this.distance >= 50){
       this.ratio = 100 /this.distance;
       this.strikeRatio = 100 / this.strikeDistance;
@@ -618,7 +642,9 @@ class Cue{
       this.isDrawnBack = true;
       this.movingIn = false;
     }
-    else if (this.isDrawnBack &&this.distance <= 100 + BALL_RADIUS){
+
+    // returns the cue to home position if the cue is too close to the ball
+    else if (this.isDrawnBack && this.distance <= 100 + BALL_RADIUS){
       this.isDrawnBack = false;
 
       this.x = this.ballX - 100 - BALL_RADIUS;
@@ -626,6 +652,8 @@ class Cue{
       this.strikeX = this.ballX;
       this.strikeY = this.ballY;
     }
+
+    // starts the cue moving inward when the mouse is released
     else if (this.isDrawnBack && !mouseIsPressed){
       this.dx ++;
       this.dy ++;
@@ -637,6 +665,8 @@ class Cue{
 
       cueSpeedFactor = 2000 / this.strikeDistance;
     }
+
+    // returns to home cue location
     else{
       this.x = this.ballX - 100;
       this.y = this.ballY;
@@ -645,6 +675,7 @@ class Cue{
     }
   }
 
+  // shows the cue as a simple black line
   show(){
     stroke("black");
     strokeWeight(4);
@@ -653,6 +684,7 @@ class Cue{
 
 }
 
+// arbeeeeeeee
 class TrapezoidWall{
   constructor(x, y, vertices){
     this.x = x;
@@ -684,6 +716,7 @@ class TrapezoidWall{
   }
 }
 
+// arbeeeeeeeee
 class Hole{
   constructor(x, y){
     this.x = x;
@@ -710,6 +743,7 @@ class Hole{
   }
 }
 
+// arbeeeeeee
 class ScoreDisplayer{
   constructor(x, y, team){
     this.x = x;
