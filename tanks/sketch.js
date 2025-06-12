@@ -46,11 +46,12 @@ let runner = Runner.create();
 Runner.run(runner, engine);
 
 class CollisionZone {
-  constructor(x, y, w, h) {
+  constructor(x, y, w, h, colour) {
     this.x = x + w / 2;
     this.y = y + h / 2;
     this.w = w;
     this.h = h;
+    this.colour = colour;
 
     let options = {
       isStatic: true,
@@ -63,7 +64,7 @@ class CollisionZone {
   }
 
   show() {
-    fill(0);
+    fill(this.colour);
     rect(this.x, this.y, this.w, this.h);
   }
 }
@@ -88,9 +89,9 @@ function setup() {
   // temporary
   currentSideHeightFactor = playerOneSideHeightFactor;
 
-  let playerOneGround = new CollisionZone(width / 2 - PADWIDTH, height / 2 + playerOneSideHeightFactor, PADWIDTH, height / 2 - playerOneSideHeightFactor);
-  let playerTwoGround = new CollisionZone(width / 2, height / 2 + playerTwoSideHeightFactor, PADWIDTH, height / 2 - playerTwoSideHeightFactor);
-  tower = new CollisionZone(width / 2 - PADWIDTH / 4, height - TOWERHEIGHT, PADWIDTH / 4, TOWERHEIGHT);
+  let playerOneGround = new CollisionZone(width / 2 - PADWIDTH, height / 2 + playerOneSideHeightFactor, PADWIDTH, height / 2 - playerOneSideHeightFactor, "black");
+  let playerTwoGround = new CollisionZone(width / 2, height / 2 + playerTwoSideHeightFactor, PADWIDTH, height / 2 - playerTwoSideHeightFactor, "black");
+  tower = new CollisionZone(width / 2 - PADWIDTH / 4, height - TOWERHEIGHT, PADWIDTH / 4, TOWERHEIGHT, 255);
 
   walls.push(playerOneGround);
   walls.push(playerTwoGround);
