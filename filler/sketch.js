@@ -178,12 +178,17 @@ function toggleCurrentPlayer(){
 function botMoves(){
   let mostPoints = 0;
   let winningIndex;
+  let points;
 
   for(let i = 0; i<colourArray.length; i++){
-    if(i !== playerOneColour && i !== playerTwoColour){
+    if(i !== playerOneColour && i !==playerTwoColour){
       
       fakeGrid = structuredClone(grid);
-      let points = 0;
+      points = 0;
+
+      desiredColour = i;
+      checkedSpaces = [];
+
       changeBoxes(GAME_WIDTH-1, 0, fakeGrid);
   
       for(let iy = 0; iy<GAME_HEIGHT; iy++){
@@ -211,13 +216,13 @@ function playerMoves(object){
 
   if(object.player === PLAYER_ONE){
     playerOneColour = desiredColour;
-    changeBoxes(0, GAME_HEIGHT-1, grid);
     checkedSpaces = [];
+    changeBoxes(0, GAME_HEIGHT-1, grid);
   }
   else{
     playerTwoColour = desiredColour;
-    changeBoxes(GAME_WIDTH-1, 0, grid);
     checkedSpaces = [];
+    changeBoxes(GAME_WIDTH-1, 0, grid);
   }
 
   for(let displayer of scoreDisplayers){
