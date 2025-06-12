@@ -64,6 +64,11 @@ class CollisionZone {
   }
 }
 
+function preload() {
+  shotFiredSound = loadSound("sound-shot-fired.wav");
+  explosionSound = loadSound("sound-explosion.wav");
+}
+
 function setup() {
   rectMode(CENTER);
   createCanvas(windowWidth, windowHeight);
@@ -152,18 +157,16 @@ function turnsRed(event) {
       ballCollision = true;
     }
     if (ballCollision) {
-
-      // play sound here
-      
-
       // this is where an explosion thingy would make sense
       if (notTheBall === playerOneTank.body.id) {
         playerOneTank.livesRemaining --;
         nextPlayersTurn();
+        explosionSound.play();
       }
       else if (notTheBall === playerTwoTank.body.id) {
         playerTwoTank.livesRemaining --;
         nextPlayersTurn();
+        explosionSound.play();
       }
     }
   }
@@ -268,6 +271,7 @@ class Bullet {
     console.log("this is working");
     let velocity = Vector.create(this.power*cos(this.inclinationAngle), - this.power*sin(this.inclinationAngle));
     Body.setVelocity(this.body, velocity);
+    shotFiredSound.play(500);
   }
 }
 
