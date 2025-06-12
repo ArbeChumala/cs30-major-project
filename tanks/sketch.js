@@ -309,7 +309,7 @@ class Bullet {
   constructor(x, y, angle, power) {
     this.x = x;
     this.y = y - TANKHEIGHT / 2;
-    this.r = 5;
+    this.r = 10;
     this.colour = "red";
 
     this.inclinationAngle = angle;
@@ -332,12 +332,12 @@ class Bullet {
 
     translate(this.x, this.y);
     rotate(this.rotationAngle);
-
+    tint(255);
     fill(this.colour);
     noStroke();
 
     image(bulletImg, 0, 0, this.r*2, this.r*2);
-
+    noTint();
     pop();
   }
 
