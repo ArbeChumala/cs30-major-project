@@ -17,34 +17,39 @@ engine.gravity.y = 0;
 let runner = Runner.create();
 Runner.run(runner, engine);
 
+const POOL_TABLE_HALF_WIDTH = 400;
+
 // define initial variables
-const HOLE_RADIUS = 5;
-const BALL_RADIUS = 17;
+const HOLE_RADIUS = 5*POOL_TABLE_HALF_WIDTH/500;
+const BALL_RADIUS = 17*POOL_TABLE_HALF_WIDTH/500;
 const SHADOW_OFFSET = 5;
+const SCORE_BALL_RADIUS = 30;
 
 //measured from width/2 and height/2
-const H_FAR_TRAPEZOID_X = 440;
-const H_MIDDLE_TRAPEZOID_X = 410;
-const H_CLOSE_TRAPEZOID_X = 30;
-const H_FAR_TRAPEZOID_Y = 260;
-const H_CLOSE_TRAPEZOID_Y = 205;
+const H_FAR_TRAPEZOID_X = 440*POOL_TABLE_HALF_WIDTH/500;
+const H_MIDDLE_TRAPEZOID_X = 410*POOL_TABLE_HALF_WIDTH/500;
+const H_CLOSE_TRAPEZOID_X = 30*POOL_TABLE_HALF_WIDTH/500;
+const H_FAR_TRAPEZOID_Y = 260*POOL_TABLE_HALF_WIDTH/500;
+const H_CLOSE_TRAPEZOID_Y = 205*POOL_TABLE_HALF_WIDTH/500;
 
 let horizontalTrapezoidMeasurments;
 
-const V_FAR_TRAPEZOID_X = 500;
-const V_CLOSE_TRAPEZOID_X = 440;
-const V_MIDDLE_TRAPEZOID_Y = 160;
-const V_CLOSE_TRAPEZOID_Y = 0.5;
-const V_FAR_TRAPEZOID_Y = 200;
+const V_FAR_TRAPEZOID_X = 500*POOL_TABLE_HALF_WIDTH/500;
+const V_CLOSE_TRAPEZOID_X = 440*POOL_TABLE_HALF_WIDTH/500;
+const V_MIDDLE_TRAPEZOID_Y = 160*POOL_TABLE_HALF_WIDTH/500;
+const V_CLOSE_TRAPEZOID_Y = 0.5*POOL_TABLE_HALF_WIDTH/500;
+const V_FAR_TRAPEZOID_Y = 200*POOL_TABLE_HALF_WIDTH/500;
 
 let verticalTrapezoidMeasurements;
 
-const HOLE_FAR_X = 460;
-const HOLE_FAR_Y = 220;
+const HOLE_FAR_X = 460*POOL_TABLE_HALF_WIDTH/500;
+const HOLE_FAR_Y = 220*POOL_TABLE_HALF_WIDTH/500;
 
 let balls = [];
 let walls = [];
 let holes = [];
+let scoreDisplayers = [];
+let cue;
 
 let ballsMovingVar = false;
 let isDrawnBack = false;
@@ -57,8 +62,8 @@ let blackBallFallen = false;
 let ballsJustMoving = false;
 let currentMilis;
 let gapMilis = 5000;
-let stripedPlayerBalls;
-let nonStripedPlayerBalls;
+let stripedPlayerBalls = 7;
+let nonStripedPlayerBalls = 7;
 let playerHasWon = false;
 
 let poolTableImg;
@@ -66,17 +71,16 @@ let ballImg;
 
 let pixelRatio;
 
-
-
 function preload(){
   poolTableImg = loadImage("assets/images/pool-tabeel.png");
   ballGridImage = loadImage("assets/images/balls.png");
+  poppins = loadFont("assets/fonts/bold-poppins.ttf");
 }
 
 function setup(){
   createCanvas(windowWidth, windowHeight);
   console.log(poolTableImg.width);
-  pixelRatio = 1000/poolTableImg.width;
+  pixelRatio = 2*POOL_TABLE_HALF_WIDTH/poolTableImg.width;
 
   horizontalTrapezoidMeasurments = {
     vertices: [
@@ -160,7 +164,6 @@ function draw(){
 
   // otherwise
   else{
-
     let ballX;
     let ballY;
 
@@ -168,6 +171,7 @@ function draw(){
     for (let ball of balls){
       ball.drawShadow();
     }
+    
     for (let ball of balls){
       if (ball.cueBall){
         ballX = ball.body.position.x;
@@ -195,11 +199,16 @@ function draw(){
       hole.show();
     }
 
-    // shows current player playing
-    fill(0);
-    strokeWeight(1);
-    textSize(20);
-    text("is player striped playing? " + stripedPlayerPlaying, 100, 100);
+    fill(255, 220);
+    noStroke();
+    textFont(poppins);
+    textSize(100);
+    text("8 Ball Pool", width/2, 150);
+
+    for(let displayer of scoreDisplayers){
+      displayer.update();
+      displayer.show();
+    }
   }
 }
 
@@ -208,6 +217,7 @@ function createGame(){
   createBalls();
   createBoundaries();
   createHoles();
+  createScoreDisplayers();
 }
 
 // called when the eight ball has been sunk, shows which player won
@@ -415,6 +425,12 @@ function createHoles(){
       holes.push(someHole);
     }
   }
+}
+
+function createScoreDisplayers(){
+  let stripedScoreDisplayer = new ScoreDisplayer(width/2-(POOL_TABLE_HALF_WIDTH + 100), height/2, "striped");
+  let solidScoreDisplayer = new ScoreDisplayer(width/2+(POOL_TABLE_HALF_WIDTH + 100), height/2, "solid");
+  scoreDisplayers = [stripedScoreDisplayer, solidScoreDisplayer];
 }
 
 function mousePressed(){
@@ -681,5 +697,37 @@ class Hole{
     fill(255, 0, 0, 0);
     circle(this.x, this.y, this.r*2);
     pop();
+  }
+}
+
+class ScoreDisplayer{
+  constructor(x, y, team){
+    this.x = x;
+    this.y = y;
+    this.r = SCORE_BALL_RADIUS;
+    this.team = team;
+    this.imageX = 30;
+    this.imageY = this.team === "striped" ? 15: 0;
+  }
+  update(){
+    this.ballsLeft = this.team === "striped" ? stripedPlayerBalls : nonStripedPlayerBalls;
+    if(this.team === "striped" === stripedPlayerPlaying && this.r < SCORE_BALL_RADIUS*1.5){
+      this.r ++;
+    }
+    else if (this.team === "striped" !== stripedPlayerPlaying && this.r > SCORE_BALL_RADIUS*0.9){
+      this.r--;
+    }
+  }
+  show(){
+    imageMode(CENTER);
+    tint(10, 50);
+    image(ballGridImage, this.x - SHADOW_OFFSET, this.y + SHADOW_OFFSET, this.r * 2, this.r * 2, this.imageX, this.imageY, 15, 15);
+    noTint();
+    image(ballGridImage, this.x, this.y, this.r * 2, this.r * 2, this.imageX, this.imageY, 15, 15);
+    textAlign(CENTER);
+    textFont(poppins);
+    textSize(30);
+    fill(255);
+    text(this.ballsLeft, this.x, this.y + 80);
   }
 }
