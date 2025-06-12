@@ -75,6 +75,8 @@ function preload(){
   poolTableImg = loadImage("assets/images/pool-tabeel.png");
   ballGridImage = loadImage("assets/images/balls.png");
   poppins = loadFont("assets/fonts/bold-poppins.ttf");
+  ballSound = loadSound("assets/sounds/ball-hitting-ball.mp3");
+  sinkingSound = loadSound("assets/sounds/ball-sinking.mp3");
 }
 
 function setup(){
@@ -143,6 +145,14 @@ function collisionManager(event){
           Body.setVelocity(ball.body, {x:0, y:0});
         }
       }
+    }
+  }
+  for (let pair of pairsArray) {
+    if (pair.bodyA.label === "ball" && pair.bodyB.label === "ball") {
+      ballSound.play();
+    }
+    else if ((pair.bodyA.label === "hole" || pair.bodyB.label === "hole") && (pair.bodyA.label === "ball" || pair.bodyA.label === "ball")) {
+      sinkingSound.play();
     }
   }
 }
