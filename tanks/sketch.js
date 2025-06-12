@@ -20,6 +20,7 @@ let theArrow;
 let theBullet;
 let powerScale;
 let bulletStopped = false;
+let collisionHasHappened = false;
 
 let playerOneSideHeightFactor;
 let playerTwoSideHeightFactor;
@@ -63,6 +64,11 @@ class CollisionZone {
   }
 }
 
+function preload() {
+  shotFiredSound = loadSound("sound-shot-fired.wav");
+  explosionSound = loadSound("sound-explosion.wav");
+}
+
 function setup() {
   rectMode(CENTER);
   createCanvas(windowWidth, windowHeight);
@@ -103,7 +109,7 @@ function draw() {
   }
   for (let tank of tanks) {
     fill(tank.colour);
-    rect(tank.x, tank.y, width / 16, height / 16);
+    rect(tank.x, tank.y, tank.w, tank.h);
   }
   if (theArrow !== null) {
     theArrow.show();
@@ -116,6 +122,7 @@ function draw() {
   if (bulletStopped) {
     nextPlayersTurn();
   }
+  playerWins();
 }
 
 function mouseDragged() {
@@ -134,6 +141,7 @@ function mousePressed() {
 
 function turnsRed(event) {
   if (bulletExists) {
+    collisionHasHappened = true;
     let notTheBall;
     let ballCollision = false;
     let pairsArray = structuredClone(event.pairs);
@@ -149,20 +157,27 @@ function turnsRed(event) {
       ballCollision = true;
     }
     if (ballCollision) {
-
-      // play sound here
-
-
       // this is where an explosion thingy would make sense
       if (notTheBall === playerOneTank.body.id) {
         playerOneTank.livesRemaining --;
         nextPlayersTurn();
+        explosionSound.play();
       }
-      else if (notTheBall === playerOneTank.body.id) {
+      else if (notTheBall === playerTwoTank.body.id) {
         playerTwoTank.livesRemaining --;
         nextPlayersTurn();
+        explosionSound.play();
       }
     }
+  }
+}
+
+function playerWins() {
+  if (playerOneTank.livesRemaining === 0) {
+    console.log("player two wins");
+  }
+  if (playerTwoTank.livesRemaining === 0) {
+    console.log("player one wins");
   }
 }
 
@@ -189,10 +204,10 @@ function nextPlayersTurn() {
 
 function launchBullet() {
   if (playerOnePlaying) {
-    theBullet = new Bullet(playerOneTank.x, playerOneTank.y + 5, theArrow.returnAngle(), power);
+    theBullet = new Bullet(playerOneTank.x, playerOneTank.y - TANKHEIGHT / 2 - 6, theArrow.returnAngle(), power);
   }
   else {
-    theBullet = new Bullet(playerTwoTank.x, playerTwoTank.y + 5, theArrow.returnAngle(), power);
+    theBullet = new Bullet(playerTwoTank.x, playerTwoTank.y - TANKHEIGHT / 2 - 6, theArrow.returnAngle(), power);
   }
   bulletExists = true;
   theBullet.launch();
@@ -238,7 +253,7 @@ class Bullet {
   }
 
   update() {
-    if (Math.abs(this.body.velocity.x) < 0.1 && Math.abs(this.body.velocity.y) < 0.1){
+    if (Math.abs(this.body.velocity.x) < 0.1 && Math.abs(this.body.velocity.y) < 0.1 && collisionHasHappened) {
       let stationary = Vector.create(0, 0);
       Body.setVelocity(this.body, stationary);
       bulletStopped = true;
@@ -252,9 +267,11 @@ class Bullet {
   }
 
   launch() {
+    collisionHasHappened = false;
     console.log("this is working");
     let velocity = Vector.create(this.power*cos(this.inclinationAngle), - this.power*sin(this.inclinationAngle));
     Body.setVelocity(this.body, velocity);
+    shotFiredSound.play(500);
   }
 }
 
@@ -383,7 +400,7 @@ class Tanks {
   }
 
   show() {
-    rectMode(CENTER, CENTER);
+    rectMode(CENTER);
     strokeWeight(1);
     fill(this.colour);
     rect(this.x, this.y, this.w, this.h);
