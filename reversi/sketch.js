@@ -123,7 +123,6 @@ function windowResized(){
 
 function draw(){
   if(myRoom || mode){
-    textFont(gameFont);
     background("#43AA8B");
     startBotTimer();
     setCursor();
@@ -156,7 +155,7 @@ function mousePressed(){
   let playerX = Math.floor((mouseX-startingMouseX)/gridUnit);
   let playerY = Math.floor((mouseY-startingMouseY)/gridUnit);
 
-  if (myRoom && mode && !jazzMusic.isPlaying()){
+  if ((myRoom || mode) && !jazzMusic.isPlaying()){
     jazzMusic.loop();
   }
   
@@ -193,12 +192,12 @@ function startParty(){
 
 function startBotMode(){
   mode = "pvb";
-  resetGame();
+  setTimeout(resetGame, 100);
 }
 
 function startPlayerMode(){
   mode = "pvp";
-  resetGame();
+  setTimeout(resetGame, 100);
 }
 
 function resetGame(){
@@ -225,12 +224,11 @@ function setupCanvas(){
   //image and text parameters
   imageMode(CENTER);
   textAlign(CENTER);
-  textFont(gameFont);
   textSize(40);
   fill(255);
 
   //reassigns variables based on canvas size
-  resizingRatio = height/228;
+  resizingRatio = height/250;
   cellSize = 18*resizingRatio;
   aisleSize = 1*resizingRatio;
   gridUnit = aisleSize + cellSize;

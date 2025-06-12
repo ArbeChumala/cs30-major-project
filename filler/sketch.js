@@ -229,6 +229,10 @@ function playerMoves(object){
     displayer.updateScore();
   }
   
+  if(mode === "pvb" && currentPlayer === PLAYER_ONE){
+    setTimeout(botMoves, 500);
+  }
+
   toggleCurrentPlayer();
 }
 
@@ -358,12 +362,20 @@ function displayFrame(){
 
 function displayButtons(){
   for(let button of buttons){
-    button.update();
-    button.show();
+    if(mode === "pvp" || myRoom && yourPlayer === shared.currentPlayer || mode === "pvb" && currentPlayer === PLAYER_ONE){
+      button.update();
+      button.show();
+    }
   }
 }
 
 function displayScore(){
+  fill(255);
+  textSize(100);
+  text("Filler", width/2, 125);
+  textSize(15);
+  text("Absorb all the colour!", width/2, 150);
+
   for(let displayer of scoreDisplayers){
     displayer.update();
     displayer.show();

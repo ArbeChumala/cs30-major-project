@@ -110,7 +110,7 @@ function setup(){
 }
 
 function collisionManager(event){
-
+  let pairsArray = structuredClone(event.pairs);
   let ballHasSunk = false;
   let sinkingBallIds = [];
   let sinkingBallPositions = [];
