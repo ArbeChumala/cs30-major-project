@@ -6,8 +6,8 @@
 // - describe what you did to take this project "above and beyond"
 
 const PADWIDTH = 600;
-const TOWERHEIGHT = 400;
-const TANKWIDTH = 75;
+const TOWERHEIGHT = 500;
+const TANKWIDTH = 150;
 const TANKHEIGHT = 50;
 
 let flyingBullet;
@@ -28,6 +28,10 @@ let currentSideHeightFactor;
 
 let playerOneTank;
 let playerTwoTank;
+
+let redTankImg;
+let blueTankImg;
+
 let tanks = [];
 let currentTank = {};
 let tower;
@@ -65,8 +69,10 @@ class CollisionZone {
 }
 
 function preload() {
-  shotFiredSound = loadSound("sound-shot-fired.wav");
-  explosionSound = loadSound("sound-explosion.wav");
+  redTankImg = loadImage("assets/images/tank-red.png");
+  blueTankImg = loadImage("assets/images/tank-blue.png");
+  shotFiredSound = loadSound("assets/sounds/sound-shot-fired.wav");
+  explosionSound = loadSound("assets/sounds/sound-explosion.wav");
 }
 
 function setup() {
@@ -84,7 +90,7 @@ function setup() {
 
   let playerOneGround = new CollisionZone(width / 2 - PADWIDTH, height / 2 + playerOneSideHeightFactor, PADWIDTH, height / 2 - playerOneSideHeightFactor);
   let playerTwoGround = new CollisionZone(width / 2, height / 2 + playerTwoSideHeightFactor, PADWIDTH, height / 2 - playerTwoSideHeightFactor);
-  tower = new CollisionZone(width / 2 - PADWIDTH / 4, height - TOWERHEIGHT, PADWIDTH / 2, TOWERHEIGHT);
+  tower = new CollisionZone(width / 2 - PADWIDTH / 4, height - TOWERHEIGHT, PADWIDTH / 4, TOWERHEIGHT);
 
   walls.push(playerOneGround);
   walls.push(playerTwoGround);
@@ -108,8 +114,7 @@ function draw() {
     body.show();
   }
   for (let tank of tanks) {
-    fill(tank.colour);
-    rect(tank.x, tank.y, tank.w, tank.h);
+    tank.show();
   }
   if (theArrow !== null) {
     theArrow.show();
@@ -393,6 +398,18 @@ class Tanks {
     this.w = w;
     this.h = h;
     this.colour = colour;
+
+    if(this.colour === "red"){
+      this.image = redTankImg;
+    }
+    else{
+      this.image = blueTankImg;
+    }
+
+    this.imageW = this.w;
+    this.imageH = this.w/this.image.width*this.image.height;
+
+
     this.livesRemaining = 3;
 
     this.body = Bodies.rectangle(this.x, this.y, this.w, this.h);
@@ -400,10 +417,9 @@ class Tanks {
   }
 
   show() {
-    rectMode(CENTER);
-    strokeWeight(1);
-    fill(this.colour);
-    rect(this.x, this.y, this.w, this.h);
+    imageMode(CENTER);
+    noSmooth();
+    image(this.image, this.x, this.y, this.imageW, this.imageH);
     strokeWeight(0);
   }
 }
