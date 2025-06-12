@@ -1,8 +1,11 @@
 html, body {
   margin: 0;
   padding: 0;
+  background-color: #294535;
 }
 
 canvas {
   display: block;
+  align-content: center;
+  margin:auto;
 }
