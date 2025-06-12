@@ -2,6 +2,7 @@
 body{
     background-color: #e2e1dc;
     font-family: 'Source Serif Pro';
+    font-style: normal;
     margin: 0px;
     padding: 0px;
 }
@@ -23,6 +24,8 @@ h2{
     font-size: 2em;
     text-align: center;
     margin-top: 10px;
+    font-family: 'Poppins';
+    padding-top: 30px;
 }
 
 h3{
@@ -85,6 +88,7 @@ td ul li{
 
 td h2{
     text-transform: uppercase;
+    padding-top: 0px;
 }
 
 td img{
@@ -104,14 +108,14 @@ h2 a:hover, li a:hover{
     font-weight: bold;
 }
 
-.movieblock{
+/* .movieblock{
     margin: 40px;
     margin-bottom: 60px;
     padding: 20px;
     background-color: #cdcdc8;
     color: #202e34;
     border-radius: 20px;
-}
+} */
 
 .movieblock td img{
     height: 500px;
@@ -119,6 +123,8 @@ h2 a:hover, li a:hover{
 
 .movieinfo{
     width: 300px;
+    font-style: normal;
+    font-family: 'Poppins';
 }
 
 .bignumber{
@@ -170,7 +176,7 @@ h2 a:hover, li a:hover{
     padding-top: 300px;
 }
 
-.dynamiclayout, .staticlayout{
+.dynamiclayout, .staticlayout, .movieblock{
     background-color: #cdcdc8;
     border-radius: 20px;
     margin-top: 20px;
@@ -216,7 +222,7 @@ h2 a:hover, li a:hover{
 
 @font-face {
     font-family: 'Source Serif Pro';
-    src: url(assets/fonts/serif-italic.ttf);
+    src: url(assets/fonts/serif.ttf);
 }
 
 @font-face {
