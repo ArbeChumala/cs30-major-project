@@ -25,7 +25,8 @@ let scoreDisplayers = [];
 let playerOneColour;
 let playerTwoColour;
 
-const SQUARE_DIMENSIONS = 60;
+
+let squareDimensions;
 const GAME_WIDTH= 8;
 const GAME_HEIGHT = 7;
 const BUTTON_WIDTH = 60;
@@ -39,7 +40,7 @@ let currentPlayer = PLAYER_ONE;
 
 let yourPlayer;
 
-const PIXEL_RATIO = 8*SQUARE_DIMENSIONS/151;
+let pixelRatio;
 const SHADOW_OFFSET = 20;
 const SCORE_BOX_WIDTH = 80;
 
@@ -54,9 +55,19 @@ function preload(){
   squareShadowImg = loadImage("assets/images/square-shadow.png");
 }
 
-function setup(){
-  noLoop();
+function setupCanvas(){
   createCanvas(windowWidth, windowHeight);
+  squareDimensions = height / 15;
+  pixelRatio = 8*squareDimensions/151;
+}
+
+function windowResized(){
+  setupCanvas();
+}
+
+function setup(){
+  setupCanvas();
+  noLoop();
   noSmooth();
 
   background("#948d8a");
@@ -145,7 +156,7 @@ function startParty(){
 
 function setupGame(){
   for(let i = 0; i<colourArray.length; i++){
-    let someButton = new Button(height/2 + 300, i);
+    let someButton = new Button(height/2 + 5*squareDimensions, i);
     buttons.push(someButton);
   }
   for(let i = 0; i<2; i++){
@@ -324,8 +335,8 @@ function setupGrid(theSequence, isForReal){
 function displayTiles(){
   for(let iy = 0; iy<GAME_HEIGHT; iy++){
     for(let ix = 0; ix<GAME_WIDTH; ix++){
-      let x = (width - SQUARE_DIMENSIONS*GAME_WIDTH)/2 + SQUARE_DIMENSIONS*ix;
-      let y = (height - SQUARE_DIMENSIONS*GAME_HEIGHT)/2 + SQUARE_DIMENSIONS*iy;
+      let x = (width - squareDimensions*GAME_WIDTH)/2 + squareDimensions*ix;
+      let y = (height - squareDimensions*GAME_HEIGHT)/2 + squareDimensions*iy;
 
       if(grid[iy][ix] === PLAYER_ONE){
         if(str(playerOneColour) === playerOneColour){
@@ -348,16 +359,16 @@ function displayTiles(){
       }
       noStroke();
       rectMode(CORNER);
-      square(x, y, SQUARE_DIMENSIONS);
+      square(x, y, squareDimensions);
     }
   }
 }
 
 function displayFrame(){
   imageMode(CENTER);
-  image(frameShadowImg, width/2 - SHADOW_OFFSET, height/2 + SHADOW_OFFSET, frameShadowImg.width*PIXEL_RATIO, frameShadowImg.height*PIXEL_RATIO);
-  image(frameShadowImg, width/2 - 0.5*SHADOW_OFFSET, height/2 + 0.5*SHADOW_OFFSET, frameShadowImg.width*PIXEL_RATIO, frameShadowImg.height*PIXEL_RATIO);
-  image(frameImg, width/2, height/2, frameImg.width*PIXEL_RATIO, frameImg.height*PIXEL_RATIO);
+  image(frameShadowImg, width/2 - SHADOW_OFFSET, height/2 + SHADOW_OFFSET, frameShadowImg.width*pixelRatio, frameShadowImg.height*pixelRatio);
+  image(frameShadowImg, width/2 - 0.5*SHADOW_OFFSET, height/2 + 0.5*SHADOW_OFFSET, frameShadowImg.width*pixelRatio, frameShadowImg.height*pixelRatio);
+  image(frameImg, width/2, height/2, frameImg.width*pixelRatio, frameImg.height*pixelRatio);
 }
 
 function displayButtons(){
@@ -372,9 +383,9 @@ function displayButtons(){
 function displayScore(){
   fill(255);
   textSize(100);
-  text("Filler", width/2, 125);
+  text("Filler", width/2, height/2 - 5*squareDimensions);
   textSize(15);
-  text("Absorb all the colour!", width/2, 150);
+  text("Absorb all the colour!", width/2, height/2-4.5*squareDimensions);
 
   for(let displayer of scoreDisplayers){
     displayer.update();
@@ -395,8 +406,6 @@ class Button{
   }
 
   show(){
-    this.x = width/2-(2.5*BUTTON_WIDTH + 2.5*BUTTON_GAP) + this.colourIndex*(BUTTON_WIDTH+BUTTON_GAP);
-
     fill(colourArray[this.colourIndex]);
     stroke("#5c5550");
     strokeWeight(4);
@@ -415,6 +424,9 @@ class Button{
   }
 
   update(){
+    this.y = height/2 + 5*squareDimensions;
+    this.x = width/2-(2.5*BUTTON_WIDTH + 2.5*BUTTON_GAP) + this.colourIndex*(BUTTON_WIDTH+BUTTON_GAP);
+
     this.isSelectable = this.colourIndex !== playerOneColour && this.colourIndex !== playerTwoColour;
 
     if(this.isSelectable){
@@ -470,10 +482,10 @@ class ScoreDisplayer{
     this.score = 1;
 
     if(this.player === PLAYER_ONE){
-      this.x = width/2 - 350;
+      this.x = width/2 - squareDimensions*6;
     }
     else{
-      this.x = width/2 + 350;
+      this.x = width/2 + squareDimensions*6;
     }
     this.y = height/2;
   }
@@ -491,8 +503,19 @@ class ScoreDisplayer{
   }
 
   update(){
+    this.updatePosition();
     this.updateColour();
     this.updateSize();
+  }
+
+  updatePosition(){
+    if(this.player === PLAYER_ONE){
+      this.x = width/2 - squareDimensions*6;
+    }
+    else{
+      this.x = width/2 + squareDimensions*6;
+    }
+    this.y = height/2;
   }
 
   updateColour(){
