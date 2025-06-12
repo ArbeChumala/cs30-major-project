@@ -5,7 +5,7 @@
 // Extra for Experts:
 // - describe what you did to take this project "above and beyond"
 
-const PADWIDTH = 600;
+const PADWIDTH = 1200;
 const TOWERHEIGHT = 500;
 const TANKWIDTH = 150;
 const TANKHEIGHT = 50;
@@ -93,15 +93,15 @@ function setup() {
 
   let playerOneGround = new CollisionZone(width / 2 - PADWIDTH, height / 2 + playerOneSideHeightFactor, PADWIDTH, height / 2 - playerOneSideHeightFactor, "black");
   let playerTwoGround = new CollisionZone(width / 2, height / 2 + playerTwoSideHeightFactor, PADWIDTH, height / 2 - playerTwoSideHeightFactor, "black");
-  tower = new CollisionZone(width / 2 - PADWIDTH / 4, height - TOWERHEIGHT, PADWIDTH / 4, TOWERHEIGHT, 255);
+  tower = new CollisionZone(width / 2 - PADWIDTH / 8, height - TOWERHEIGHT, PADWIDTH / 8, TOWERHEIGHT, 255);
 
   walls.push(playerOneGround);
   walls.push(playerTwoGround);
   walls.push(tower);
   
-  playerOneTank = new Tanks(width / 2 - PADWIDTH / 2, height / 2 + playerOneSideHeightFactor - TANKHEIGHT / 2, TANKWIDTH, TANKHEIGHT, "red");
+  playerOneTank = new Tanks(width / 2 - PADWIDTH / 4, height / 2 + playerOneSideHeightFactor - TANKHEIGHT / 2, TANKWIDTH, TANKHEIGHT, "red");
 
-  playerTwoTank = new Tanks(width / 2 + PADWIDTH / 2, height / 2 + playerTwoSideHeightFactor - TANKHEIGHT / 2, TANKWIDTH, TANKHEIGHT, "blue");
+  playerTwoTank = new Tanks(width / 2 + PADWIDTH / 4, height / 2 + playerTwoSideHeightFactor - TANKHEIGHT / 2, TANKWIDTH, TANKHEIGHT, "blue");
 
   tanks.push(playerOneTank);
   tanks.push(playerTwoTank);
@@ -122,6 +122,7 @@ function draw() {
   if (theArrow !== null) {
     theArrow.show();
     powerScale.show();
+    launchButtonShow();
   }
   if (bulletExists) {
     theBullet.update();
@@ -133,6 +134,11 @@ function draw() {
   playerWins();
 }
 
+function launchButtonShow() {
+  fill("green");
+  rect(width - 25, 25, 50, 50);
+}
+
 function mouseDragged() {
   if (theArrow !== null) {
     powerScale.update(height / 2 + currentSideHeightFactor, mouseX, mouseY);
@@ -142,7 +148,7 @@ function mouseDragged() {
 }
 
 function mousePressed() {
-  if (theArrow !== null && Math.abs(mouseX - 7 * width / 8) < width / 8 && Math.abs(mouseY - height / 4) < height / 8) {
+  if (theArrow !== null && mouseX < width && mouseX > width - 50 && mouseY > 0 && mouseY < 50) {
     launchBullet();
   }
 }
@@ -279,7 +285,7 @@ class Bullet {
     console.log("this is working");
     let velocity = Vector.create(this.power*cos(this.inclinationAngle), - this.power*sin(this.inclinationAngle));
     Body.setVelocity(this.body, velocity);
-    shotFiredSound.play(500);
+    shotFiredSound.play();
   }
 }
 
@@ -417,7 +423,7 @@ class PowerScale {
   }
 
   returnPower() {
-    return (this.barX - this.x + this.w / 2) * 100 / this.w + 25;
+    return (this.barX - this.x + this.w / 2) * 150 / this.w + 25;
   }
 
   show() {
