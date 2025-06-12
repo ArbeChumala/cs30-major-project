@@ -45,6 +45,8 @@ let verticalTrapezoidMeasurements;
 const HOLE_FAR_X = 460*POOL_TABLE_HALF_WIDTH/500;
 const HOLE_FAR_Y = 220*POOL_TABLE_HALF_WIDTH/500;
 
+const MOUSE_FORGIVENESS = 50;
+
 // defining variables, including state vairables and arrays
 let balls = [];
 let walls = [];
@@ -625,8 +627,8 @@ class Cue{
       }
     }
 
-    // follows the mouse if pressed and if the mouse is within 50 pixels along x and y of the tip of the cue
-    else if (mouseIsPressed && mouseX < this.x + 25 && mouseX > this.x - 25 && mouseY > this.y - 25 && mouseY < this.y + 25 &&this.distance >= 50){
+    // follows the mouse if pressed and if the mouse is within 100 pixels along x and y of the tip of the cue
+    else if (mouseIsPressed && mouseX < this.x + MOUSE_FORGIVENESS && mouseX > this.x - MOUSE_FORGIVENESS && mouseY > this.y - MOUSE_FORGIVENESS && mouseY < this.y + MOUSE_FORGIVENESS && this.distance >= MOUSE_FORGIVENESS){
       this.ratio = 100 /this.distance;
       this.strikeRatio = 100 / this.strikeDistance;
       
