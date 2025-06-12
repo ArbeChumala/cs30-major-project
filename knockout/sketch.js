@@ -56,6 +56,7 @@ Runner.run(runner, engine);
 //functions that are called by p5 or events
 //-----------------------------------------------------------------------------------------------
 
+// preloads fonts, images, and sounds
 function preload(){
   poppins = loadFont("assets/fonts/bold-poppins.ttf");
   blackPenguinImg = loadImage("assets/images/black-penguin.png");
@@ -69,6 +70,7 @@ function preload(){
   splashSound = loadSound("assets/sounds/splash.m4a");
 }
 
+// sets initial inputs and initialized collisionStart to call penguinsCollided when a collision occurs
 function setup(){
   theColour = color(120, 157, 176);
   noLoop();
@@ -85,6 +87,8 @@ function setup(){
   Events.on(engine, "collisionStart", penguinsCollided);
 }
 
+// if a player is in a p5party room, calls all necessary functions. If they are waiting displays waiting screen and if the room is full
+// displays a sorry, room full message
 function draw(){
   if(myRoom){
     if(partyLoadGuestShareds().length === 2){
@@ -116,6 +120,7 @@ function draw(){
   }
 }
 
+// sets arrows to an activity based on arrow.isActive when the mouse is pressed
 function mousePressed(){
   if(myRoom){
     for(let arrow of arrows){
@@ -124,6 +129,7 @@ function mousePressed(){
   }
 }
 
+// sets all arrow activities to false when mouse is released
 function mouseReleased(){
   if(myRoom){
     for(let arrow of arrows){
@@ -132,6 +138,7 @@ function mouseReleased(){
   }
 }
 
+// /allows player to reset, play, and enter rooms based on key presses
 function keyPressed(){
   if(!myRoom && key === "Enter"){
     startParty();
@@ -147,10 +154,13 @@ function keyPressed(){
 //-----------------------------------------------------------------------------------------------
 //functions called by other functions
 //-----------------------------------------------------------------------------------------------
+
+// plays collision sound when penguins collide
 function penguinsCollided(){
   boingSound.play();
 }
 
+// shows all penguins, playing a sound and removing them if they fall of the map
 function displayPenguins(){
   for(i = penguins.length - 1; i>=0; i--){
     penguins[i].show();
@@ -169,6 +179,7 @@ function displayPenguins(){
   }
 }
 
+// shows a score for each player based on the amount of penguins they have remaining
 function determineScore(){
   bluePenguinCount = 0;
   blackPenguinCount = 0;
@@ -215,6 +226,7 @@ function displayScore(){
   text("Press R to Reset", width/2, height-40);
 }
 
+// if one or both players have lost all their penguins, shows the winner (arbeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee update winScreen here)
 function determineWinner(){
   if(penguinsStationary()){
     if(!bluePenguinCount && blackPenguinCount){
@@ -229,6 +241,7 @@ function determineWinner(){
   }
 }
 
+// initializes the p5party for the game
 function startParty(){
   myRoom = userInput.value();
   partyConnect(
@@ -251,6 +264,7 @@ function startParty(){
     setupGame);
 }
 
+// ititializes the game, resetting penguin locations and arrows, disconnecting the room if it is no longer full
 function setupGame(){
   Composite.clear(world);
   penguins = [];
@@ -291,6 +305,7 @@ function setupGame(){
   loop();
 }
 
+// arbeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 function playerReady(dataObject){
   if(playersReady.length === 0){
     playersReady.push(dataObject.player);
@@ -310,6 +325,7 @@ function playerReady(dataObject){
   }
 }
 
+// shares the penguin velocities with the non-host player
 function hostSendVelocities(){
   if(partyIsHost()){
     for(let penguin of penguins){
@@ -321,6 +337,7 @@ function hostSendVelocities(){
   }
 }
 
+// checks if the velocities need to be sent or are still being requested
 function checkIfReady(){
   if(!partyIsHost()){
     let isReady = true;
@@ -340,6 +357,7 @@ function checkIfReady(){
   }
 }
 
+// arbeeeeeeeeeeeeeee
 function guestSendVelocities(){
   if(!partyIsHost()){
     for(let penguin of penguins){
@@ -350,12 +368,14 @@ function guestSendVelocities(){
   }
 }
 
+// arbeeeeeeeeeee
 function recieveVelocities(){
   for(let penguin of penguins){
     penguin.recieveVelocity();
   }
 }
 
+// checks if all penguins are stationary
 function penguinsStationary(){
   let movingPenguinFound = false;
   for(let penguin of penguins){
