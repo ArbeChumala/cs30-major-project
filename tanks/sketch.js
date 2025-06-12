@@ -72,6 +72,8 @@ class CollisionZone {
 function preload() {
   redTankImg = loadImage("assets/images/tank-red.png");
   blueTankImg = loadImage("assets/images/tank-blue.png");
+  redArrowImg = loadImage("assets/images/red-arrow-head.png");
+  blueArrowImg = loadImage("assets/images/blue-arrow-head.png");
   shotFiredSound = loadSound("assets/sounds/sound-shot-fired.wav");
   explosionSound = loadSound("assets/sounds/sound-explosion.wav");
 }
@@ -104,7 +106,7 @@ function setup() {
   tanks.push(playerOneTank);
   tanks.push(playerTwoTank);
 
-  theArrow = new Arrow(playerOneTank.x, playerOneTank.y);
+  theArrow = new Arrow(playerOneTank.x, playerOneTank.y, "red");
   powerScale = new PowerScale(playerOneTank.x, playerOneTank.y + (height - playerOneTank.y) / 2, playerOneTank.colour);
 }
 
@@ -197,12 +199,12 @@ function nextPlayersTurn() {
   bulletExists = false;
   playerOnePlaying = !playerOnePlaying;
   if (playerOnePlaying) {
-    theArrow = new Arrow(playerOneTank.x, playerOneTank.y);
+    theArrow = new Arrow(playerOneTank.x, playerOneTank.y, "red");
     currentSideHeightFactor = playerOneSideHeightFactor;
     powerScale.updateLocation(playerOneTank.x, playerOneTank.y + (height - playerOneTank.y) / 2, playerOneTank.colour);
   }
   else {
-    theArrow = new Arrow(playerTwoTank.x, playerTwoTank.y);
+    theArrow = new Arrow(playerTwoTank.x, playerTwoTank.y, "blue");
     currentSideHeightFactor = playerTwoSideHeightFactor;
     powerScale.updateLocation(playerTwoTank.x, playerTwoTank.y + (height - playerTwoTank.y) / 2, playerTwoTank.colour);
   }
@@ -284,26 +286,60 @@ class Bullet {
 
 
 class Arrow {
-  constructor(tankX, tankY){
+  constructor(tankX, tankY, colour){
     this.tankX = tankX;
     this.tankY = tankY;
 
     this.x = this.tankX;
     this.y = this.tankY - 100;
-    this.colour = "black";
+    this.colour = colour;
+
+    if(this.colour === "red"){
+      this.arrowImg = redArrowImg;
+    }
+    else{
+      this.arrowImg = blueArrowImg;
+    }
 
     this.stationaryLastFrame = true;
   }
 
   show() {
+    let angle = this.findAngle();
+
     //draw the line
     stroke(this.colour);
-    strokeCap(ROUND);
-    strokeWeight(5);
-  
+    strokeCap(SQUARE);
+    strokeWeight(8);
+
     line(this.x, this.y, this.tankX, this.tankY);
+
+    push();
+
+    translate(this.x, this.y);
+    rotate(-angle);
+    image(this.arrowImg, 0, 0, this.arrowImg.width, this.arrowImg.height);
+
+    pop();
+
     noStroke();
   }
+
+  findAngle(){
+    let dy = -(this.y - this.tankY);
+    let dx = this.x - this.tankX;
+
+    let startingAngle = atan(dy/dx);
+
+    if(dx > 0){
+      this.angle = startingAngle - PI/2;
+    }
+    else{
+      this.angle = startingAngle + PI/2;
+    }
+    return this.angle;
+  }
+
   update(power) {
     let dx;
     let dy;
