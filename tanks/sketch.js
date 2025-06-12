@@ -6,9 +6,11 @@
 // - describe what you did to take this project "above and beyond"
 
 const PADWIDTH = 1200;
-const TOWERHEIGHT = 500;
+const TOWERHEIGHT = 600;
 const TANKWIDTH = 150;
 const TANKHEIGHT = 50;
+const TILE_SIZE = 60;
+const PIXEL_RATIO = 60/19;
 
 let flyingBullet;
 let bulletExists = false;
@@ -29,10 +31,22 @@ let currentSideHeightFactor;
 let playerOneTank;
 let playerTwoTank;
 
+let redHeartImg;
+let blueHeartImg;
+let bulletImg;
 let redTankImg;
 let blueTankImg;
+let tileSet;
+let poppins;
+let castleImg;
+let redArrowImg;
+let blueArrowImg;
+let shotFiredSound;
+let explosionSound;
 
 let tanks = [];
+let scoreDisplayers = [];
+let launchButton; 
 let currentTank = {};
 let tower;
 
@@ -46,17 +60,43 @@ let runner = Runner.create();
 Runner.run(runner, engine);
 
 class CollisionZone {
-  constructor(x, y, w, h, colour) {
+  constructor(x, y, w, h, id) {
+    this.anchorX = x;
+    this.anchorY = y;
     this.x = x + w / 2;
     this.y = y + h / 2;
     this.w = w;
     this.h = h;
-    this.colour = colour;
+    this.id = id;
 
     let options = {
       isStatic: true,
       friction: 0.8,
     };
+
+    let tilesArray = [];
+
+    let totalTiles = Math.ceil(this.w/TILE_SIZE);
+
+    for(let i = 0; i<totalTiles; i++){
+      if(i === 0 && this.id === "playerTwo"){
+        tilesArray.push(0);
+      }
+      else if(i=== 1 && this.id === "playerTwo"){
+        tilesArray.push(1);
+      }
+      else if(i === totalTiles-2 && this.id === "playerOne"){
+        tilesArray.push(3);
+      }
+      else if(i === totalTiles-1 && this.id === "playerOne"){
+        tilesArray.push(4);
+      }
+      else if(this.id !== "tower"){
+        tilesArray.push(2);
+      }
+    }
+
+    this.tiles = tilesArray;
 
     this.body = Bodies.rectangle(this.x, this.y, this.w, this.h, options);
 
@@ -64,12 +104,32 @@ class CollisionZone {
   }
 
   show() {
-    fill(this.colour);
-    rect(this.x, this.y, this.w, this.h);
+    if(this.id === "playerOne" || this.id === "playerTwo"){
+      fill("#261729");
+      rectMode(CENTER);
+      rect(this.x, this.y + 19*TILE_SIZE/16 - 1, this.w, this.h);
+
+      for(let i = 0; i<this.tiles.length; i++){
+        imageMode(CORNER);
+        tint(150, 180, 200);
+        image(tileSet, this.anchorX + TILE_SIZE*i, this.anchorY, TILE_SIZE, 19*TILE_SIZE/16, this.tiles[i]*16, 0, 16, 19);
+      }
+      noTint();
+    }
+    else{
+      imageMode(CORNER);
+      image(castleImg, this.anchorX, this.anchorY, this.w, castleImg.height*this.w/castleImg.width);
+    }
   }
 }
 
 function preload() {
+  redHeartImg = loadImage("assets/images/red-heart.png");
+  blueHeartImg = loadImage("assets/images/blue-heart.png");
+  bulletImg = loadImage("assets/images/bullet.png");
+  poppins = loadFont("assets/fonts/bold-poppins.ttf");
+  castleImg = loadImage("assets/images/castle.png");
+  tileSet = loadImage("assets/images/ground-tiles.png");
   redTankImg = loadImage("assets/images/tank-red.png");
   blueTankImg = loadImage("assets/images/tank-blue.png");
   redArrowImg = loadImage("assets/images/red-arrow-head.png");
@@ -79,6 +139,7 @@ function preload() {
 }
 
 function setup() {
+  textFont(poppins);
   rectMode(CENTER);
   createCanvas(windowWidth, windowHeight);
 
@@ -91,13 +152,13 @@ function setup() {
   // temporary
   currentSideHeightFactor = playerOneSideHeightFactor;
 
-  let playerOneGround = new CollisionZone(width / 2 - PADWIDTH, height / 2 + playerOneSideHeightFactor, PADWIDTH, height / 2 - playerOneSideHeightFactor, "black");
-  let playerTwoGround = new CollisionZone(width / 2, height / 2 + playerTwoSideHeightFactor, PADWIDTH, height / 2 - playerTwoSideHeightFactor, "black");
-  tower = new CollisionZone(width / 2 - PADWIDTH / 8, height - TOWERHEIGHT, PADWIDTH / 8, TOWERHEIGHT, 255);
+  let playerOneGround = new CollisionZone(width / 2 - PADWIDTH, height / 2 + playerOneSideHeightFactor, PADWIDTH, height / 2 - playerOneSideHeightFactor, "playerOne");
+  let playerTwoGround = new CollisionZone(width / 2, height / 2 + playerTwoSideHeightFactor, PADWIDTH, height / 2 - playerTwoSideHeightFactor, "playerTwo");
+  tower = new CollisionZone(width / 2 - PADWIDTH / 8, height - TOWERHEIGHT, PADWIDTH / 8, TOWERHEIGHT, "tower");
 
+  walls.push(tower);
   walls.push(playerOneGround);
   walls.push(playerTwoGround);
-  walls.push(tower);
   
   playerOneTank = new Tanks(width / 2 - PADWIDTH / 4, height / 2 + playerOneSideHeightFactor - TANKHEIGHT / 2, TANKWIDTH, TANKHEIGHT, "red");
 
@@ -108,11 +169,17 @@ function setup() {
 
   theArrow = new Arrow(playerOneTank.x, playerOneTank.y, "red");
   powerScale = new PowerScale(playerOneTank.x, playerOneTank.y + (height - playerOneTank.y) / 2, playerOneTank.colour);
+
+  launchButton = createButton("Launch");
+  launchButton.position(width - 150, 50);
+  launchButton.mousePressed(launchBullet);
+
+  scoreDisplayers = [new ScoreDisplayer("red"), new ScoreDisplayer("blue")];
 }
 
 function draw() {
   rectMode(CENTER);
-  background(220);
+  background("#171f29");
   for (let body of walls) {
     body.show();
   }
@@ -122,7 +189,6 @@ function draw() {
   if (theArrow !== null) {
     theArrow.show();
     powerScale.show();
-    launchButtonShow();
   }
   if (bulletExists) {
     theBullet.update();
@@ -131,13 +197,20 @@ function draw() {
   if (bulletStopped) {
     nextPlayersTurn();
   }
+  for (let tank of tanks) {
+    tank.show();
+  }
+  for(let displayer of scoreDisplayers){
+    displayer.update();
+    displayer.show();
+  }
   playerWins();
 }
 
-function launchButtonShow() {
-  fill("green");
-  rect(width - 25, 25, 50, 50);
-}
+// function launchButtonShow() {
+//   fill("green");
+//   rect(width - 25, 25, 50, 50);
+// }
 
 function mouseDragged() {
   if (theArrow !== null) {
@@ -147,11 +220,11 @@ function mouseDragged() {
   }
 }
 
-function mousePressed() {
-  if (theArrow !== null && mouseX < width && mouseX > width - 50 && mouseY > 0 && mouseY < 50) {
-    launchBullet();
-  }
-}
+// function mousePressed() {
+//   if (theArrow !== null && mouseX < width && mouseX > width - 50 && mouseY > 0 && mouseY < 50) {
+//     launchBullet();
+//   }
+// }
 
 function turnsRed(event) {
   if (bulletExists) {
@@ -217,14 +290,16 @@ function nextPlayersTurn() {
 }
 
 function launchBullet() {
-  if (playerOnePlaying) {
-    theBullet = new Bullet(playerOneTank.x, playerOneTank.y - TANKHEIGHT / 2 - 6, theArrow.returnAngle(), power);
+  if(theArrow !== null){
+    if (playerOnePlaying) {
+      theBullet = new Bullet(playerOneTank.x, playerOneTank.y - TANKHEIGHT / 2 - 6, theArrow.returnAngle(), power);
+    }
+    else {
+      theBullet = new Bullet(playerTwoTank.x, playerTwoTank.y - TANKHEIGHT / 2 - 6, theArrow.returnAngle(), power);
+    }
+    bulletExists = true;
+    theBullet.launch();
   }
-  else {
-    theBullet = new Bullet(playerTwoTank.x, playerTwoTank.y - TANKHEIGHT / 2 - 6, theArrow.returnAngle(), power);
-  }
-  bulletExists = true;
-  theBullet.launch();
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -261,7 +336,7 @@ class Bullet {
     fill(this.colour);
     noStroke();
 
-    circle(0, 0, this.r * 2);
+    image(bulletImg, 0, 0, this.r*2, this.r*2);
 
     pop();
   }
@@ -307,6 +382,8 @@ class Arrow {
       this.arrowImg = blueArrowImg;
     }
 
+    this.colour = this.colour ==="red" ? "#a5371e": "#278c90";
+
     this.stationaryLastFrame = true;
   }
 
@@ -324,7 +401,7 @@ class Arrow {
 
     translate(this.x, this.y);
     rotate(-angle);
-    image(this.arrowImg, 0, 0, this.arrowImg.width, this.arrowImg.height);
+    image(this.arrowImg, 0, 0, this.arrowImg.width*PIXEL_RATIO, this.arrowImg.height*PIXEL_RATIO);
 
     pop();
 
@@ -337,7 +414,7 @@ class Arrow {
 
     let startingAngle = atan(dy/dx);
 
-    if(dx > 0){
+    if(dx >= 0){
       this.angle = startingAngle - PI/2;
     }
     else{
@@ -427,10 +504,14 @@ class PowerScale {
   }
 
   show() {
-    fill(this.colour);
-    rect(this.x, this.y, this.w, this.h);
-    fill("green");
-    rect(this.barX, this.y, this.w / 8, this.h);
+    fill(0, 70);
+    rect(this.x, this.y, this.w, this.h/3, 3, 3, 3, 3);
+    fill(100);
+    rect(this.barX, this.y, this.w / 8, this.h, 3, 3, 3, 3);
+    textAlign(CENTER);
+    fill(255);
+    textSize(15);
+    text("Power: " + Math.round(this.returnPower()), this.x, this.y + 50);
   }
 }
 
@@ -449,6 +530,8 @@ class Tanks {
       this.image = blueTankImg;
     }
 
+    this.colour = "red" ? "#c14d35": "#3ba2a5";
+
     this.imageW = this.w;
     this.imageH = this.w/this.image.width*this.image.height;
 
@@ -462,7 +545,43 @@ class Tanks {
   show() {
     imageMode(CENTER);
     noSmooth();
+    tint(200);
     image(this.image, this.x, this.y, this.imageW, this.imageH);
+    noTint();
     strokeWeight(0);
+  }
+}
+
+class ScoreDisplayer{
+  constructor(playerColour){
+    this.colour = playerColour;
+    this.x = playerColour === "red" ? 50: width-50;
+    this.y = height - 50;
+    this.image = playerColour === "red" ? redHeartImg: blueHeartImg;
+    this.width = 50;
+  }
+  update(){
+    if (this.colour === "red"){
+      this.livesRemaining = playerOneTank.livesRemaining;
+    }
+    else{
+      this.livesRemaining = playerTwoTank.livesRemaining;
+    }
+  }
+  show(){
+    fill(255, 100);
+    textSize(100);
+    textFont(poppins);
+    text("Tanks", width/2, 150);
+    for(let i = 0; i<this.livesRemaining; i++){
+      tint(200);
+      if(this.colour === "red"){
+        image(this.image, this.x + this.width*1.1*i, this.y, this.width, this.width);
+      }
+      else{
+        image(this.image, this.x - this.width*1.1*i, this.y, this.width, this.width);
+      }
+      noTint();
+    }
   }
 }
