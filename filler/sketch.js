@@ -241,7 +241,7 @@ function playerMoves(object){
   }
   
   if(mode === "pvb" && currentPlayer === PLAYER_ONE){
-    setTimeout(botMoves, 500);
+    setTimeout(botMoves, 1000);
   }
 
   toggleCurrentPlayer();
@@ -399,10 +399,9 @@ function displayScore(){
 class Button{
   constructor(y, colourIndex){
     this.y = y;
-    this.width = BUTTON_WIDTH;
+    this.width = squareDimensions*1.2;
     this.colourIndex = colourIndex;
     this.isSelectable;
-    this.gradientTime = false;
   }
 
   show(){
@@ -425,27 +424,15 @@ class Button{
 
   update(){
     this.y = height/2 + 5*squareDimensions;
-    this.x = width/2-(2.5*BUTTON_WIDTH + 2.5*BUTTON_GAP) + this.colourIndex*(BUTTON_WIDTH+BUTTON_GAP);
+    this.x = width/2-(2.5*squareDimensions*1.2 + 2.5*BUTTON_GAP) + this.colourIndex*(squareDimensions*1.2+BUTTON_GAP);
 
     this.isSelectable = this.colourIndex !== playerOneColour && this.colourIndex !== playerTwoColour;
 
-    if(this.isSelectable){
-      if(this.gradientTime){
-        this.width -= 0.5;
-        this.gradientTime = this.width < BUTTON_WIDTH*0.95;
-      }
-      else{
-        this.width =  BUTTON_WIDTH;
-      }
+    if(this.isSelectable && this.width < squareDimensions*1.2){
+      this.width ++;
     }
-    else{
-      if(this.gradientTime){
-        this.width += 0.5;
-        this.gradientTime = this.width < BUTTON_WIDTH*0.75;
-      }
-      else{
-        this.width = 0.7*BUTTON_WIDTH;
-      }
+    else if(!this.isSelectable && this.width > squareDimensions*0.9){
+      this.width --;
     }
   }
 
@@ -461,7 +448,6 @@ class Button{
           player: shared.currentPlayer,
         });
       }
-      this.gradientTime = true;
     }
 
     else if(this.isSelectable && mode &&  
@@ -524,18 +510,18 @@ class ScoreDisplayer{
 
   updateSize(){
     if(myRoom){
-      if(shared.currentPlayer === this.player && this.size < SCORE_BOX_WIDTH){
+      if(shared.currentPlayer === this.player && this.size < squareDimensions*1.5){
         this.size ++;
       }
-      else if(shared.currentPlayer !== this.player && this.size > 0.7*SCORE_BOX_WIDTH){
+      else if(shared.currentPlayer !== this.player && this.size > squareDimensions*0.7){
         this.size--;
       }
     }
     else if(mode){
-      if(currentPlayer === this.player && this.size < SCORE_BOX_WIDTH){
+      if(currentPlayer === this.player && this.size < squareDimensions*1.5){
         this.size ++;
       }
-      else if(currentPlayer !== this.player && this.size > 0.7*SCORE_BOX_WIDTH){
+      else if(currentPlayer !== this.player && this.size > 0.9*squareDimensions){
         this.size--;
       }
     }
