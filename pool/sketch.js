@@ -17,33 +17,33 @@ engine.gravity.y = 0;
 let runner = Runner.create();
 Runner.run(runner, engine);
 
-const POOL_TABLE_HALF_WIDTH = 400;
+let poolTableHalfWidth;
 
 // define initial variables
-const HOLE_RADIUS = 5*POOL_TABLE_HALF_WIDTH/500;
-const BALL_RADIUS = 17*POOL_TABLE_HALF_WIDTH/500;
-const SHADOW_OFFSET = 5;
-const SCORE_BALL_RADIUS = 30;
+let holeRadius;
+let ballRadius;
+let shadowOffset;
+let scoreBallRadius;
 
 //defining constants measured from width/2 and height/2
-const H_FAR_TRAPEZOID_X = 440*POOL_TABLE_HALF_WIDTH/500;
-const H_MIDDLE_TRAPEZOID_X = 410*POOL_TABLE_HALF_WIDTH/500;
-const H_CLOSE_TRAPEZOID_X = 30*POOL_TABLE_HALF_WIDTH/500;
-const H_FAR_TRAPEZOID_Y = 260*POOL_TABLE_HALF_WIDTH/500;
-const H_CLOSE_TRAPEZOID_Y = 205*POOL_TABLE_HALF_WIDTH/500;
+let hFarTrapX;
+let hMiddleTrapX;
+let hCloseTrapX;
+let hFarTrapY;
+let hCloseTrapY;
 
 let horizontalTrapezoidMeasurments;
 
-const V_FAR_TRAPEZOID_X = 500*POOL_TABLE_HALF_WIDTH/500;
-const V_CLOSE_TRAPEZOID_X = 440*POOL_TABLE_HALF_WIDTH/500;
-const V_MIDDLE_TRAPEZOID_Y = 160*POOL_TABLE_HALF_WIDTH/500;
-const V_CLOSE_TRAPEZOID_Y = 0.5*POOL_TABLE_HALF_WIDTH/500;
-const V_FAR_TRAPEZOID_Y = 200*POOL_TABLE_HALF_WIDTH/500;
+let vFarTrapX;
+let vCloseTrapX;
+let vMiddleTrapY;
+let vCloseTrapY;
+let vFarTrapY;
 
 let verticalTrapezoidMeasurements;
 
-const HOLE_FAR_X = 460*POOL_TABLE_HALF_WIDTH/500;
-const HOLE_FAR_Y = 220*POOL_TABLE_HALF_WIDTH/500;
+let holeFarX;
+let holeFarY;
 
 const MOUSE_FORGIVENESS = 50;
 
@@ -83,38 +83,69 @@ function preload(){
   sinkingSound = loadSound("assets/sounds/ball-sinking.mp3");
 }
 
-// create canvas and set trapezoid measurements, as well as initializing collisionStarted event
-function setup(){
+function setupCanvas(){
   createCanvas(windowWidth, windowHeight);
-  console.log(poolTableImg.width);
-  pixelRatio = 2*POOL_TABLE_HALF_WIDTH/poolTableImg.width;
+
+  // define initial variables
+  holeRadius = 5*poolTableHalfWidth/500;
+  ballRadius = 17*poolTableHalfWidth/500;
+  shadowOffset = 5*poolTableHalfWidth/500;
+  scoreBallRadius = 30*poolTableHalfWidth/500;
+
+  //defining constants measured from width/2 and height/2
+  hFarTrapX = 440*poolTableHalfWidth/500;
+  hMiddleTrapX = 410*poolTableHalfWidth/500;
+  hCloseTrapX = 30*poolTableHalfWidth/500;
+  hFarTrapY = 260*poolTableHalfWidth/500;
+  hCloseTrapY = 205*poolTableHalfWidth/500;
+
+  horizontalTrapezoidMeasurments;
+
+  vFarTrapX = 500*poolTableHalfWidth/500;
+  vCloseTrapX = 440*poolTableHalfWidth/500;
+  vMiddleTrapY = 160*poolTableHalfWidth/500;
+  vCloseTrapY = 0.5*poolTableHalfWidth/500;
+  vFarTrapY = 200*poolTableHalfWidth/500;
+
+  verticalTrapezoidMeasurements;
+
+  holeFarX = 460*poolTableHalfWidth/500;
+  holeFarY = 220*poolTableHalfWidth/500;
+
+  pixelRatio = 2*poolTableHalfWidth/poolTableImg.width;
 
   horizontalTrapezoidMeasurments = {
     vertices: [
-      {x: H_FAR_TRAPEZOID_X, y:H_FAR_TRAPEZOID_Y},
-      {x: H_CLOSE_TRAPEZOID_X, y: H_FAR_TRAPEZOID_Y},
-      {x: H_CLOSE_TRAPEZOID_X, y: H_CLOSE_TRAPEZOID_Y},
-      {x: H_MIDDLE_TRAPEZOID_X, y: H_CLOSE_TRAPEZOID_Y},
+      {x: hFarTrapX, y:hFarTrapY},
+      {x: hCloseTrapX, y: hFarTrapY},
+      {x: hCloseTrapX, y: hCloseTrapY},
+      {x: hMiddleTrapX, y: hCloseTrapY},
     ],
     centre: {
-      x: (H_FAR_TRAPEZOID_X + H_CLOSE_TRAPEZOID_X)/2,
-      y: (H_FAR_TRAPEZOID_Y + H_CLOSE_TRAPEZOID_Y)/2,
+      x: (hFarTrapX + hCloseTrapX)/2,
+      y: (hFarTrapY + hCloseTrapY)/2,
     },
   };
 
   verticalTrapezoidMeasurements = {
     vertices: [
-      {x: V_FAR_TRAPEZOID_X, y: V_FAR_TRAPEZOID_Y},
-      {x: V_CLOSE_TRAPEZOID_X, y: V_MIDDLE_TRAPEZOID_Y},
-      {x: V_CLOSE_TRAPEZOID_X, y: V_CLOSE_TRAPEZOID_Y},
-      {x: V_FAR_TRAPEZOID_X, y: V_CLOSE_TRAPEZOID_Y},
+      {x: vFarTrapX, y: vFarTrapY},
+      {x: vCloseTrapX, y: vMiddleTrapY},
+      {x: vCloseTrapX, y: vCloseTrapY},
+      {x: vFarTrapX, y: vCloseTrapY},
     ],
     centre: {
-      x: (V_FAR_TRAPEZOID_X + V_CLOSE_TRAPEZOID_X)/2,
-      y: (V_FAR_TRAPEZOID_Y + V_CLOSE_TRAPEZOID_Y)/2,
+      x: (vFarTrapX + vCloseTrapX)/2,
+      y: (vFarTrapY + vCloseTrapY)/2,
     },
   };
+}
 
+// create canvas and set trapezoid measurements, as well as initializing collisionStarted event
+function setup(){
+  poolTableHalfWidth = windowHeight/4*poolTableImg.width/poolTableImg.height;
+  setupCanvas();
+  
   // calls functions to create barriers and balls
   Events.on(engine, "collisionStart", collisionManager);
   createGame();
@@ -168,7 +199,7 @@ function draw(){
   imageMode(CENTER);
   smooth();
   tint(10, 50);
-  image(poolTableImg, width/2 - 2*SHADOW_OFFSET, height/2 + 2*SHADOW_OFFSET, poolTableImg.width*pixelRatio, poolTableImg.height*pixelRatio);
+  image(poolTableImg, width/2 - 2*shadowOffset, height/2 + 2*shadowOffset, poolTableImg.width*pixelRatio, poolTableImg.height*pixelRatio);
   noTint();
   noSmooth();
   image(poolTableImg, width/2, height/2, poolTableImg.width*pixelRatio, poolTableImg.height*pixelRatio);
@@ -218,8 +249,8 @@ function draw(){
     fill(255, 220);
     noStroke();
     textFont(poppins);
-    textSize(100);
-    text("8 Ball Pool", width/2, 150);
+    textSize(20*pixelRatio);
+    text("8 Ball Pool", width/2, height/2 - poolTableHalfWidth*0.7);
 
     for(let displayer of scoreDisplayers){
       displayer.update();
@@ -282,7 +313,7 @@ function ballOut(){
 
         // Composite.add(world, balls[i].body);
         Body.setPosition(balls[i].body, homeBase);
-        balls[i].r = BALL_RADIUS;
+        balls[i].r = ballRadius;
         balls[i].ballSinking = false;
         balls[i].ballSunk = false;
 
@@ -363,7 +394,7 @@ function findColumn(n){
 // find the x value for a column of balls
 function findX(column){
   let startingX = width/2 + 100;
-  let horizontalGap = sqrt(3)*BALL_RADIUS;
+  let horizontalGap = sqrt(3)*ballRadius;
   return startingX + horizontalGap*column;
 }
 
@@ -373,7 +404,7 @@ function findY(n, column){
   let firstOfRow = column*(column-1)/2;
   let placement = n-firstOfRow;
 
-  return startingY +(column-1)*BALL_RADIUS - placement*2*BALL_RADIUS;
+  return startingY +(column-1)*ballRadius - placement*2*ballRadius;
 }
 
 // creates pool table boundaries
@@ -441,8 +472,8 @@ function createHoles(){
   for(let ix = 0; ix<verticalSpots; ix++){
     for(let iy = 0.5; iy<horizontalSpots; iy++){
 
-      let x = width/2 + (ix-1)*HOLE_FAR_X;
-      let y = x !== width/2 ? height/2 + 2*(iy-1)*HOLE_FAR_Y: height/2 + 2*(iy-1)*(HOLE_FAR_Y+2.5*HOLE_RADIUS);
+      let x = width/2 + (ix-1)*holeFarX;
+      let y = x !== width/2 ? height/2 + 2*(iy-1)*holeFarY: height/2 + 2*(iy-1)*(holeFarY+2.5*holeRadius);
 
       let someHole = new Hole(x, y);
       holes.push(someHole);
@@ -452,8 +483,8 @@ function createHoles(){
 
 // arbe should comment this
 function createScoreDisplayers(){
-  let stripedScoreDisplayer = new ScoreDisplayer(width/2-(POOL_TABLE_HALF_WIDTH + 100), height/2, "striped");
-  let solidScoreDisplayer = new ScoreDisplayer(width/2+(POOL_TABLE_HALF_WIDTH + 100), height/2, "solid");
+  let stripedScoreDisplayer = new ScoreDisplayer(width/2-poolTableHalfWidth*1.2, height/2, "striped");
+  let solidScoreDisplayer = new ScoreDisplayer(width/2+poolTableHalfWidth*1.2, height/2, "solid");
   scoreDisplayers = [stripedScoreDisplayer, solidScoreDisplayer];
 }
 
@@ -487,7 +518,7 @@ class Ball{
     this.eightBall = id === 7;
     this.cueBall = id === 15;
 
-    this.r = BALL_RADIUS;
+    this.r = ballRadius;
 
     this.options ={
       restitution: 1,
@@ -513,7 +544,7 @@ class Ball{
       rotate(this.angle);
       noSmooth();
       imageMode(CENTER);
-      let tintFactor = BALL_RADIUS - this.r;
+      let tintFactor = ballRadius - this.r;
   
       tint(230-10*tintFactor);
       image(ballGridImage, 0, 0, this.r*2, this.r*2, this.imageX, this.imageY, this.imageW, this.imageW);
@@ -558,7 +589,7 @@ class Ball{
   drawShadow(){
     smooth();
     tint(10, 50);
-    image(ballGridImage, this.x - SHADOW_OFFSET, this.y + SHADOW_OFFSET, this.r*2, this.r*2, this.imageX, this.imageY, this.imageW, this.imageW);
+    image(ballGridImage, this.x - shadowOffset, this.y + shadowOffset, this.r*2, this.r*2, this.imageX, this.imageY, this.imageW, this.imageW);
     noTint();
     noSmooth();
   }
@@ -583,7 +614,7 @@ class Cue{
     this.ballX = ballX;
     this.ballY = ballY;
 
-    this.x = ballX - 100 - BALL_RADIUS;
+    this.x = ballX - 100 - ballRadius;
     this.y = ballY;
 
     this.strikeX = ballX;
@@ -617,7 +648,7 @@ class Cue{
       this.strikeX -= this.strikeRatio * this.distanceX / cueSpeedFactor;
       this.strikeY -= this.strikeRatio * this.distanceY / cueSpeedFactor;
 
-      if (this.distance < 100 + BALL_RADIUS){
+      if (this.distance < 100 + ballRadius){
         this.movingIn = false;
         for (let ball of balls){
           if (ball.cueBall){
@@ -646,10 +677,10 @@ class Cue{
     }
 
     // returns the cue to home position if the cue is too close to the ball
-    else if (this.isDrawnBack && this.distance <= 100 + BALL_RADIUS){
+    else if (this.isDrawnBack && this.distance <= 100 + ballRadius){
       this.isDrawnBack = false;
 
-      this.x = this.ballX - 100 - BALL_RADIUS;
+      this.x = this.ballX - 100 - ballRadius;
       this.y = this.ballY;
       this.strikeX = this.ballX;
       this.strikeY = this.ballY;
@@ -723,7 +754,7 @@ class Hole{
   constructor(x, y){
     this.x = x;
     this.y = y;
-    this.r = HOLE_RADIUS;
+    this.r = holeRadius;
     
     this.options = {
       restitution: 0,
@@ -750,24 +781,24 @@ class ScoreDisplayer{
   constructor(x, y, team){
     this.x = x;
     this.y = y;
-    this.r = SCORE_BALL_RADIUS;
+    this.r = scoreBallRadius;
     this.team = team;
     this.imageX = 30;
     this.imageY = this.team === "striped" ? 15: 0;
   }
   update(){
     this.ballsLeft = this.team === "striped" ? stripedPlayerBalls : nonStripedPlayerBalls;
-    if(this.team === "striped" === stripedPlayerPlaying && this.r < SCORE_BALL_RADIUS*1.5){
+    if(this.team === "striped" === stripedPlayerPlaying && this.r < scoreBallRadius*1.5){
       this.r ++;
     }
-    else if (this.team === "striped" !== stripedPlayerPlaying && this.r > SCORE_BALL_RADIUS*0.9){
+    else if (this.team === "striped" !== stripedPlayerPlaying && this.r > scoreBallRadius*0.9){
       this.r--;
     }
   }
   show(){
     imageMode(CENTER);
     tint(10, 50);
-    image(ballGridImage, this.x - SHADOW_OFFSET, this.y + SHADOW_OFFSET, this.r * 2, this.r * 2, this.imageX, this.imageY, 15, 15);
+    image(ballGridImage, this.x - shadowOffset, this.y + shadowOffset, this.r * 2, this.r * 2, this.imageX, this.imageY, 15, 15);
     noTint();
     image(ballGridImage, this.x, this.y, this.r * 2, this.r * 2, this.imageX, this.imageY, 15, 15);
     textAlign(CENTER);
