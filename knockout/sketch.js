@@ -21,10 +21,13 @@ engine.gravity.y=0;
 // penguin arrays
 let penguins = [];
 let arrows = [];
+let winDisplayer;
+
 let squareWidth = 450;
 
 let hostStatus;
 let playerCanJoin = true;
+let gameOver = false;
 
 let playersReady = [];
 
@@ -95,21 +98,22 @@ function draw(){
   if(myRoom){
     if(partyLoadGuestShareds().length === 2){
       background(theColour);
-      rectMode(CENTER);
-      noStroke();
-      noSmooth();
-    
-      image(iceShadowImg, width/2 - SHADOW_OFFSET*5*0.5, height/2+5*(squareWidth/120) + SHADOW_OFFSET*5, squareWidth, squareWidth*1.1 + 1.1*10*(squareWidth/120));
-      imageMode(CORNER);
-      image(iceImg, width/2 - squareWidth/2, height/2-squareWidth/2, squareWidth, squareWidth + 10*(squareWidth/120));
-      imageMode(CENTER);
-  
+
+      displayIce();
       determineScore();
       displayScore();
       displayPenguins();
-      determineWinner();
+      
+      if(!gameOver){
+        determineWinner();
+      }
+      else{
+        displayWinScreen();
+      }
+      
     }
     else if(partyLoadGuestShareds().length ===1){
+      noStroke();
       background(theColour);
       textSize(100);
       text("Join Room", width/2, height/2 - 100);
@@ -167,6 +171,18 @@ function penguinsCollided(){
   boingSound.play();
 }
 
+function displayWinScreen(){
+  winDisplayer.update();
+  winDisplayer.show();
+}
+
+function displayIce(){
+  image(iceShadowImg, width/2 - SHADOW_OFFSET*5*0.5, height/2+5*(squareWidth/120) + SHADOW_OFFSET*5, squareWidth, squareWidth*1.1 + 1.1*10*(squareWidth/120));
+  imageMode(CORNER);
+  image(iceImg, width/2 - squareWidth/2, height/2-squareWidth/2, squareWidth, squareWidth + 10*(squareWidth/120));
+  imageMode(CENTER);
+}
+
 // shows all penguins, playing a sound and removing them if they fall of the map
 function displayPenguins(){
   for(i = penguins.length - 1; i>=0; i--){
@@ -195,13 +211,16 @@ function determineScore(){
     if(penguin.team === "guest"){
       blackPenguinCount ++;
     }
-    else{
+    else if(penguin.team === "host"){
       bluePenguinCount++;
     }
   }
 }
 
 function displayScore(){
+  noStroke();
+  noSmooth();
+
   //displays the title and objective
   textSize(70);
   text("Knockout", width/2, 100);
@@ -230,21 +249,29 @@ function displayScore(){
 
   //displays some instructions
   textSize(15);
-  text("Press P when Ready To Launch!", width/2, height-60);
-  text("Press R to Reset", width/2, height-40);
+  if(!gameOver){
+    text("Press P when Ready To Launch!", width/2, height-60);
+    text("Press R to Reset", width/2, height-40);
+  }
 }
 
 // if one or both players have lost all their penguins, shows the winner (arbeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee update winScreen here)
 function determineWinner(){
   if(penguinsStationary()){
-    if(!bluePenguinCount && blackPenguinCount){
-      console.log("black penguin wins");
+    if(penguins.length > 0 && bluePenguinCount===0){
+      removeElements();
+      gameOver = true;
+      winDisplayer = new WinDisplayer("BLACK");
     }
-    else if(bluePenguinCount && !blackPenguinCount){
-      console.log("blue penguin wins");
+    else if(penguins.length > 0 && blackPenguinCount===0){
+      removeElements();
+      gameOver = true;
+      winDisplayer = new WinDisplayer("BLUE");
     }
-    else if (!bluePenguinCount && !blackPenguinCount){
-      console.log("tie");
+    else if (penguins.length ===0){
+      removeElements();
+      gameOver = true;
+      winDisplayer = new WinDisplayer("TIE");
     }
   }
 }
@@ -606,5 +633,42 @@ class Arrow{
 
   chooseY(){
     return this.chooseNewCoordinate(this.penguinY);
+  }
+}
+
+class WinDisplayer{
+  constructor(winningPlayer){
+    this.winningPlayer = winningPlayer;
+    this.x = width/2;
+    this.y = height;
+    this.w = 500;
+    this.h = 100;
+    this.a = 1;
+    this.colour = color(46, 87, 104);
+  }
+  update(){
+    if(this.y > height/2){
+      this.y*=0.98;
+    }
+    if(this.a < 100){
+      this.a*=1.3;
+    }
+  }
+  show(){
+    noStroke();
+    background(10, 10, 10, this.a);
+    fill(this.colour);
+    rectMode(CENTER);
+    rect(this.x, this.y, this.w, this.h, 10, 10, 10, 10);
+    textAlign(CENTER, CENTER);
+    fill(255);
+    textSize(50);
+
+    if(this.winningPlayer !== "TIE"){
+      text(this.winningPlayer + " WINS!", this.x, this.y-10);
+    }
+    else{
+      text("IT'S A TIE!", this.x, this.y-10);      
+    }
   }
 }
