@@ -37,6 +37,7 @@ let blackArrowHeadImg;
 let blueArrowHeadImg;
 let boingSound;
 let splashSound;
+let jazzMusic;
 
 let shared;
 
@@ -55,6 +56,7 @@ Runner.run(runner, engine);
 
 // preloads fonts, images, and sounds
 function preload(){
+  jazzMusic = loadSound("assets/sounds/jazz-music.mp3");
   poppins = loadFont("assets/fonts/bold-poppins.ttf");
   blackPenguinImg = loadImage("assets/images/black-penguin.png");
   bluePenguinImg = loadImage("assets/images/blue-penguin.png");
@@ -126,6 +128,12 @@ function draw(){
 // sets arrows to an activity based on arrow.isActive when the mouse is pressed
 function mousePressed(){
   if(myRoom){
+    //plays music
+    if (!jazzMusic.isPlaying()){
+      jazzMusic.setVolume(0.5);
+      jazzMusic.loop();
+    }
+
     for(let arrow of arrows){
       arrow.activity = arrow.isActive();
     }

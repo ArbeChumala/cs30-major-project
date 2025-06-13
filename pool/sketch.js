@@ -64,12 +64,17 @@ let nonStripedPlayerBalls = 7;
 let playerHasWon = false;
 
 let poolTableImg;
-let ballImg;
+let ballGridImage;
+let jazzMusic;
+let ballSound;
+let sinkingSound;
+let poppins;
 
 let pixelRatio;
 
 // preload assets
 function preload(){
+  jazzMusic = loadSound("assets/sounds/jazz-music.mp3");
   poolTableImg = loadImage("assets/images/pool-tabeel.png");
   ballGridImage = loadImage("assets/images/balls.png");
   poppins = loadFont("assets/fonts/bold-poppins.ttf");
@@ -503,6 +508,14 @@ function createScoreDisplayers(){
   let stripedScoreDisplayer = new ScoreDisplayer(width/2-poolTableHalfWidth*1.2, height/2, "striped");
   let solidScoreDisplayer = new ScoreDisplayer(width/2+poolTableHalfWidth*1.2, height/2, "solid");
   scoreDisplayers = [stripedScoreDisplayer, solidScoreDisplayer];
+}
+
+function mousePressed(){
+  //plays music
+  if (!jazzMusic.isPlaying()){
+    jazzMusic.setVolume(0.5);
+    jazzMusic.loop();
+  }
 }
 
 // ---------------------------------------------------------------------------------------------------------

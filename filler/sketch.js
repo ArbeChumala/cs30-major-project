@@ -12,6 +12,7 @@ let frameImg;
 let frameShadowImg;
 let squareShadowImg;
 let mouseClick;
+let jazzMusic;
 
 let grid;
 let fakeGrid;
@@ -53,6 +54,7 @@ const SCORE_BOX_WIDTH = 80;
 
 //loading assets
 function preload(){
+  jazzMusic = loadSound("assets/sounds/jazz-music.mp3");
   poppins = loadFont("assets/fonts/bold-poppins.ttf");
   frameImg = loadImage("assets/images/frame.png");
   frameShadowImg = loadImage("assets/images/outer-shadow.png");
@@ -135,6 +137,12 @@ function keyPressed(){
 }
 
 function mousePressed(){
+  //plays music
+  if ((myRoom || mode) && !jazzMusic.isPlaying()){
+    jazzMusic.setVolume(0.5);
+    jazzMusic.loop();
+  }
+
   //plays a mouseclick sound
   mouseClick.play();
 

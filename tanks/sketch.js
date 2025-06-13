@@ -48,6 +48,7 @@ let blueArrowImg;
 let shotFiredSound;
 let explosionSound;
 let explosionGif;
+let jazzMusic;
 
 let tanks = [];
 let scoreDisplayers = [];
@@ -69,6 +70,7 @@ Runner.run(runner, engine);
 
 // prelaods images and sounds
 function preload() {
+  jazzMusic = loadSound("assets/sounds/jazz-music.mp3");
   redHeartImg = loadImage("assets/images/red-heart.png");
   blueHeartImg = loadImage("assets/images/blue-heart.png");
   bulletImg = loadImage("assets/images/bullet.png");
@@ -175,6 +177,14 @@ function mouseDragged() {
     powerScale.update(height / 2 + currentSideHeightFactor, mouseX, mouseY);
     power = powerScale.returnPower();
     theArrow.update(power);
+  }
+}
+
+function mousePressed(){
+  //plays music
+  if (!jazzMusic.isPlaying()){
+    jazzMusic.setVolume(0.5);
+    jazzMusic.loop();
   }
 }
 

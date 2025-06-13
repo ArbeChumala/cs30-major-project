@@ -157,6 +157,7 @@ function mousePressed(){
   let playerY = Math.floor((mouseY-startingMouseY)/gridUnit);
 
   if ((myRoom || mode) && !jazzMusic.isPlaying()){
+    jazzMusic.setVolume(0.5);
     jazzMusic.loop();
   }
   
