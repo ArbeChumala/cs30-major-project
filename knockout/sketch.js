@@ -16,7 +16,7 @@ let penguins = [];
 let arrows = [];
 let winDisplayer;
 
-let squareWidth = 300;
+let squareWidth = 400;
 
 let hostStatus;
 let playerCanJoin = true;
