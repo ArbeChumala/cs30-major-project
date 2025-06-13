@@ -53,6 +53,7 @@ let board;
 let animationFrameArray = [];
 let jazzMusic;
 let poppins;
+let mouseClick;
 
 //coordinates and image size shortcuts
 let resizingRatio;
@@ -80,7 +81,8 @@ function preload(){
   blackGhostTile = loadImage("assets/ghost-black-tile.png");
   gameFont = loadFont("assets/fonts/gamefont.otf");
   poppins = loadFont("assets/fonts/bold-poppins.ttf");
-  jazzMusic = loadSound("assets/jazz-music.mp3");
+  jazzMusic = loadSound("assets/sounds/jazz-music.mp3");
+  mouseClick = loadSound("assets/sounds/button-click.m4a");
   for (let i = 0; i<=12; i++){
     animationFrameArray.push(loadImage(`assets/animation-frames/${i}.png`));
   }
@@ -152,6 +154,7 @@ function keyPressed(){
 
 function mousePressed(){
   //finds the x and y coordinates (with respect to the grid cells) of the mouse
+  mouseClick.play();
   let playerX = Math.floor((mouseX-startingMouseX)/gridUnit);
   let playerY = Math.floor((mouseY-startingMouseY)/gridUnit);
 

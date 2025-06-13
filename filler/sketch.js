@@ -9,6 +9,7 @@ let poppins;
 let frameImg;
 let frameShadowImg;
 let squareShadowImg;
+let mouseClick;
 
 let grid;
 let fakeGrid;
@@ -53,6 +54,7 @@ function preload(){
   frameImg = loadImage("assets/images/frame.png");
   frameShadowImg = loadImage("assets/images/outer-shadow.png");
   squareShadowImg = loadImage("assets/images/square-shadow.png");
+  mouseClick = loadSound("assets/sounds/button-click.m4a");
 }
 
 function setupCanvas(){
@@ -113,6 +115,7 @@ function keyPressed(){
 }
 
 function mousePressed(){
+  mouseClick.play();
   for(let button of buttons){
     button.checkIfPressed();
   }
