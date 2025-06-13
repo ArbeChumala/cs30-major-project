@@ -28,6 +28,7 @@ let whiteTileCount = 2;
 let blackTileCount = 2;
 let mode;
 let timerStarted = false;
+let winDisplayer;
 
 let currentClickX;
 let currentClickY;
@@ -82,7 +83,7 @@ function preload(){
   gameFont = loadFont("assets/fonts/gamefont.otf");
   poppins = loadFont("assets/fonts/bold-poppins.ttf");
   jazzMusic = loadSound("assets/sounds/jazz-music.mp3");
-  mouseClick = loadSound("assets/sounds/button-click.m4a");
+  mouseClick = loadSound("assets/sounds/button-sound.m4a");
   for (let i = 0; i<=12; i++){
     animationFrameArray.push(loadImage(`assets/animation-frames/${i}.png`));
   }
@@ -491,6 +492,7 @@ function determineWinner(){
   //very advanced logic here... having more tiles means you win
   theWinner = whiteTileCount > blackTileCount ? "WHITE":"BLACK";
   gameOver = true;
+  winDisplayer = new WinDisplayer(theWinner);
 }
 
 function displayGrid(){
@@ -586,13 +588,15 @@ function displayScore(){
 function displayWinScreen(){
   //displays the win screen if the game is over
   if(gameOver){
-    let x = noise(noiseTimer, 0)*width;
-    let y = noise(0, noiseTimer)*height;
+    winDisplayer.update();
+    winDisplayer.show();
+    // let x = noise(noiseTimer, 0)*width;
+    // let y = noise(0, noiseTimer)*height;
   
-    noiseTimer += DELTA_NOISE_TIMER;
+    // noiseTimer += DELTA_NOISE_TIMER;
 
-    textSize(70);
-    text(`CONGRATULATIONS, ${theWinner} WON!`, x, y);
+    // textSize(70);
+    // text(`CONGRATULATIONS, ${theWinner} WON!`, x, y);
   }
 }
 
@@ -613,3 +617,35 @@ function setCursor(){
   }
 }
 
+class WinDisplayer{
+  constructor(winningPlayer){
+    this.winningPlayer = winningPlayer;
+    this.x = width/2;
+    this.y = height;
+    this.w = 400;
+    this.h = 100;
+    this.a = 1;
+    this.colour = color(33, 58, 42);
+  }
+  update(){
+    if(this.y > height/2){
+      this.y*=0.98;
+    }
+    if(this.a < 100){
+      this.a*=1.3;
+    }
+  }
+  show(){
+    noStroke();
+    background(10, 10, 10, this.a);
+    rect(this.x, this.y, this.w, this.h, 10, 10, 10, 10);
+    fill(this.colour);
+    rectMode(CENTER);
+    rect(this.x, this.y, this.w, this.h, 10, 10, 10, 10);
+    textAlign(CENTER, CENTER);
+    fill(255);
+    textSize(50);
+
+    text(this.winningPlayer + " WINS!", this.x, this.y-10);
+  }
+}

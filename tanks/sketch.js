@@ -12,6 +12,7 @@ const TANKHEIGHT = 50;
 const TILE_SIZE = 60;
 const PIXEL_RATIO = 60/19;
 
+let gameOver = false;
 let flyingBullet;
 let bulletExists = false;
 let walls = [];
@@ -50,6 +51,7 @@ let scoreDisplayers = [];
 let launchButton; 
 let currentTank = {};
 let tower;
+let winDisplay;
 
 let power;
 
@@ -121,34 +123,46 @@ function setup() {
 function draw() {
   rectMode(CENTER);
   background("#171f29");
-  for (let body of walls) {
-    body.show();
+  if(!gameOver){
+    for (let body of walls) {
+      body.show();
+    }
+    for (let tank of tanks) {
+      tank.show();
+    }
+    if (theArrow !== null) {
+      theArrow.show();
+      powerScale.show();
+    }
+    if (bulletExists) {
+      theBullet.update();
+      theBullet.show();
+    }
+    if (bulletStopped) {
+      nextPlayersTurn();
+    }
+    for (let tank of tanks) {
+      tank.show();
+    }
+    for(let displayer of scoreDisplayers){
+      displayer.update();
+      displayer.show();
+    }
+    if(gifPlayable){
+      playTheGif(theBullet.x, theBullet.y - 75);
+    }
+    playerWins();
   }
-  for (let tank of tanks) {
-    tank.show();
+  else{
+    for (let body of walls) {
+      body.show();
+    }
+    for (let tank of tanks) {
+      tank.show();
+    }
+    winDisplay.update();
+    winDisplay.show();
   }
-  if (theArrow !== null) {
-    theArrow.show();
-    powerScale.show();
-  }
-  if (bulletExists) {
-    theBullet.update();
-    theBullet.show();
-  }
-  if (bulletStopped) {
-    nextPlayersTurn();
-  }
-  for (let tank of tanks) {
-    tank.show();
-  }
-  for(let displayer of scoreDisplayers){
-    displayer.update();
-    displayer.show();
-  }
-  if(gifPlayable){
-    playTheGif(theBullet.x, theBullet.y - 75);
-  }
-  playerWins();
 }
 
 // updates the powerScale and arrow when the mouse is dragged
@@ -201,10 +215,14 @@ function collisionStarted(event) {
 // arbeeeeeeeeeeeeeeeeeee this is the win screen thingggggggggggggggggggggggggggggggggggggggggg
 function playerWins() {
   if (playerOneTank.livesRemaining === 0) {
-    console.log("player two wins");
+    gameOver = true;
+    removeElements();
+    winDisplay = new WinDisplayer("playerTwo");
   }
-  if (playerTwoTank.livesRemaining === 0) {
-    console.log("player one wins");
+  else if (playerTwoTank.livesRemaining === 0) {
+    gameOver = true;
+    removeElements();
+    winDisplay = new WinDisplayer("playerOne");
   }
 }
 
@@ -223,19 +241,21 @@ function playTheGif(x, y){
 
 // removes the bullet from the world and swithces the players turn by moving the arrow and powerScale to the other tank
 function nextPlayersTurn() {
-  bulletStopped = false;
-  Composite.remove(world, theBullet.body);
-  bulletExists = false;
-  playerOnePlaying = !playerOnePlaying;
-  if (playerOnePlaying) {
-    theArrow = new Arrow(playerOneTank.x, playerOneTank.y, "red");
-    currentSideHeightFactor = playerOneSideHeightFactor;
-    powerScale.updateLocation(playerOneTank.x, playerOneTank.y + (height - playerOneTank.y) / 2, playerOneTank.colour);
-  }
-  else {
-    theArrow = new Arrow(playerTwoTank.x, playerTwoTank.y, "blue");
-    currentSideHeightFactor = playerTwoSideHeightFactor;
-    powerScale.updateLocation(playerTwoTank.x, playerTwoTank.y + (height - playerTwoTank.y) / 2, playerTwoTank.colour);
+  if(!gameOver){
+    bulletStopped = false;
+    Composite.remove(world, theBullet.body);
+    bulletExists = false;
+    playerOnePlaying = !playerOnePlaying;
+    if (playerOnePlaying) {
+      theArrow = new Arrow(playerOneTank.x, playerOneTank.y, "red");
+      currentSideHeightFactor = playerOneSideHeightFactor;
+      powerScale.updateLocation(playerOneTank.x, playerOneTank.y + (height - playerOneTank.y) / 2, playerOneTank.colour);
+    }
+    else {
+      theArrow = new Arrow(playerTwoTank.x, playerTwoTank.y, "blue");
+      currentSideHeightFactor = playerTwoSideHeightFactor;
+      powerScale.updateLocation(playerTwoTank.x, playerTwoTank.y + (height - playerTwoTank.y) / 2, playerTwoTank.colour);
+    }
   }
 }
 
@@ -626,6 +646,43 @@ class ScoreDisplayer{
         image(this.image, this.x - this.width*1.1*i, this.y, this.width, this.width);
       }
       noTint();
+    }
+  }
+}
+
+class WinDisplayer{
+  constructor(winningPlayer){
+    this.winningPlayer = winningPlayer;
+    this.x = width/2;
+    this.y = height;
+    this.w = 400;
+    this.h = 100;
+    this.a = 1;
+    this.colour ="#212d3a";
+  }
+  update(){
+    if(this.y > height/2){
+      this.y*=0.95;
+    }
+    if(this.a < 100){
+      this.a*=1.3;
+    }
+  }
+  show(){
+    background(10, 10, 10, this.a);
+    rect(this.x, this.y, this.w, this.h, 10, 10, 10, 10);
+    fill(this.colour);
+    rectMode(CENTER);
+    rect(this.x, this.y, this.w, this.h, 10, 10, 10, 10);
+    textAlign(CENTER, CENTER);
+    fill(255);
+    textSize(50);
+
+    if(this.winningPlayer === "playerOne"){
+      text("RED WINS!", this.x, this.y-10);
+    }
+    else{
+      text("BLUE WINS!", this.x, this.y-10);
     }
   }
 }
