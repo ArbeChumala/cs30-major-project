@@ -53,6 +53,7 @@ let walls = [];
 let holes = [];
 let scoreDisplayers = [];
 let cue;
+let winDisplayer;
 
 let ballsMovingVar = false;
 let isDrawnBack = false;
@@ -206,7 +207,11 @@ function draw(){
 
   // if the eight ball has been sunk, displays winning message
   if (playerHasWon){
-    showWinningPlayer(stripedPlayerPlaying);
+    for (let ball of balls) {
+      ball.show();
+    }
+    winDisplayer.update();
+    winDisplayer.show();
   }
 
   // otherwise
@@ -241,7 +246,7 @@ function draw(){
       ball.show();
     }
 
-    // shows barriers
+    // shows barriers (for debug)
     for (let wall of walls){
       wall.show();
     }
@@ -331,7 +336,7 @@ function ballOut(){
         }
         if (balls[i].eightBall){
           currentMilis = millis();
-          playerHasWon = true;
+          determineWinner();
         }
         else if (balls[i].striped){
           stripedPlayerBalls --;
@@ -348,6 +353,16 @@ function ballOut(){
   if (!samePlayerAgain){
     stripedPlayerPlaying = !stripedPlayerPlaying;
   }
+}
+
+function determineWinner(){
+  if(stripedPlayerPlaying && stripedPlayerBalls === 0 || !stripedPlayerPlaying && nonStripedPlayerBalls !== 0){
+    winDisplayer = new WinDisplayer("STRIPES");
+  }
+  else if(!stripedPlayerPlaying && nonStripedPlayerBalls === 0 || stripedPlayerPlaying && stripedPlayerBalls !== 0){
+    winDisplayer = new WinDisplayer("SOLIDS");
+  }
+  playerHasWon = true;
 }
 
 // checks if there are any balls in motion
@@ -809,5 +824,37 @@ class ScoreDisplayer{
     textSize(30);
     fill(255);
     text(this.ballsLeft, this.x, this.y + 80);
+  }
+}
+
+class WinDisplayer{
+  constructor(winningPlayer){
+    this.winningPlayer = winningPlayer;
+    this.x = width/2;
+    this.y = height;
+    this.w = 600;
+    this.h = 100;
+    this.a = 1;
+    this.colour = color(33, 58, 42);
+  }
+  update(){
+    if(this.y > height/2){
+      this.y*=0.98;
+    }
+    if(this.a < 100){
+      this.a*=1.3;
+    }
+  }
+  show(){
+    noStroke();
+    background(10, 10, 10, this.a);
+    fill(this.colour);
+    rectMode(CENTER);
+    rect(this.x, this.y, this.w, this.h, 10, 10, 10, 10);
+    textAlign(CENTER, CENTER);
+    fill(255);
+    textSize(50);
+
+    text(this.winningPlayer + " WINS!", this.x, this.y-10);
   }
 }

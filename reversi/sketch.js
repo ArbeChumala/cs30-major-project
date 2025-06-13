@@ -625,7 +625,7 @@ class WinDisplayer{
     this.w = 400;
     this.h = 100;
     this.a = 1;
-    this.colour = color(33, 58, 42);
+    this.colour = color(63, 108, 92);
   }
   update(){
     if(this.y > height/2){
@@ -638,7 +638,6 @@ class WinDisplayer{
   show(){
     noStroke();
     background(10, 10, 10, this.a);
-    rect(this.x, this.y, this.w, this.h, 10, 10, 10, 10);
     fill(this.colour);
     rectMode(CENTER);
     rect(this.x, this.y, this.w, this.h, 10, 10, 10, 10);
