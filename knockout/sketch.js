@@ -9,6 +9,7 @@
 const {Engine, Events, Render, Runner, Vector, Body, Bodies, Composite} = Matter;
 
 let myRoom;
+let myId;
 let userInput;
 let theColour;
 
@@ -72,6 +73,7 @@ function preload(){
 
 // sets initial inputs and initialized collisionStart to call penguinsCollided when a collision occurs
 function setup(){
+  myId = random();
   theColour = color(120, 157, 176);
   noLoop();
   imageMode(CENTER);
@@ -98,7 +100,9 @@ function draw(){
       noSmooth();
     
       image(iceShadowImg, width/2 - SHADOW_OFFSET*5*0.5, height/2+5*(squareWidth/120) + SHADOW_OFFSET*5, squareWidth, squareWidth*1.1 + 1.1*10*(squareWidth/120));
-      image(iceImg, width/2, height/2+5*(squareWidth/120), squareWidth, squareWidth + 10*(squareWidth/120));
+      imageMode(CORNER);
+      image(iceImg, width/2 - squareWidth/2, height/2-squareWidth/2, squareWidth, squareWidth + 10*(squareWidth/120));
+      imageMode(CENTER);
   
       determineScore();
       displayScore();
@@ -144,6 +148,9 @@ function keyPressed(){
     startParty();
   }
   else if(myRoom && key === "p"){
+    for(let arrow of arrows){
+      arrow.invisible = true;
+    }
     partyEmit("playerReady", {player: hostStatus});
   }
   else if (myRoom && key === "r"){
@@ -223,6 +230,7 @@ function displayScore(){
 
   //displays some instructions
   textSize(15);
+  text("Press P when Ready To Launch!", width/2, height-60);
   text("Press R to Reset", width/2, height-40);
 }
 
@@ -293,15 +301,16 @@ function setupGame(){
   textFont(poppins);
 
   if(partyLoadGuestShareds().length <2){
-    partyLoadMyShared({name: myRoom});
+    partyLoadMyShared({name: myId});
   }
-  else{
+  else if(partyLoadGuestShareds()[0].name !== myId && partyLoadGuestShareds()[1].name !== myId){
     playerCanJoin = false;
     myRoom = false;
     partyDisconnect();
   }
 
   removeElements();
+
   loop();
 }
 
@@ -471,7 +480,7 @@ class Penguin{
   }
 
   isDying(){
-    return !(Math.abs(this.x - width/2) < squareWidth/2+this.r && Math.abs(this.y - height/2) < squareWidth/2+this.r);
+    return !(Math.abs(this.x - width/2) < squareWidth/2+this.r*0.7 && Math.abs(this.y - height/2) < squareWidth/2+this.r*0.7);
   }
 
   isDead(){
@@ -488,6 +497,7 @@ class Arrow{
     this.y = this.chooseY();
 
     this.activity = false;
+    this.invisible = false;
 
     if(!partyIsHost()){
       this.colour = color(48, 49, 59);
@@ -503,7 +513,7 @@ class Arrow{
 
   show(){
     //the penguins have been stationary
-    if(penguinsStationary() && this.stationaryLastFrame){
+    if(penguinsStationary() && this.stationaryLastFrame && !this.invisible){
       //draw the line
       stroke(this.colour);
       strokeCap(SQUARE);
@@ -523,6 +533,7 @@ class Arrow{
     //the penguins are just stopping
     else if (penguinsStationary() && !this.stationaryLastFrame){
       this.stationaryLastFrame = true;
+      this.invisible = false;
       this.x = this.chooseX();
       this.y = this.chooseY();
     }

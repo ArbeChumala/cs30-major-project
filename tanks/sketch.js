@@ -16,6 +16,7 @@ let flyingBullet;
 let bulletExists = false;
 let walls = [];
 let playerOnePlaying = true;
+let gifPlayable = false;
 
 let theArrow;
 let theBullet;
@@ -42,6 +43,7 @@ let redArrowImg;
 let blueArrowImg;
 let shotFiredSound;
 let explosionSound;
+let explosionGif;
 
 let tanks = [];
 let scoreDisplayers = [];
@@ -74,6 +76,7 @@ function preload() {
   blueArrowImg = loadImage("assets/images/blue-arrow-head.png");
   shotFiredSound = loadSound("assets/sounds/sound-shot-fired.wav");
   explosionSound = loadSound("assets/sounds/sound-explosion.wav");
+  explosionGif = loadImage("assets/images/explosion.gif");
 }
 
 function setup() {
@@ -142,6 +145,9 @@ function draw() {
     displayer.update();
     displayer.show();
   }
+  if(gifPlayable){
+    playTheGif(theBullet.x, theBullet.y - 75);
+  }
   playerWins();
 }
 
@@ -173,6 +179,10 @@ function collisionStarted(event) {
       ballCollision = true;
     }
     if (ballCollision) {
+      if(!gifPlayable){
+        explosionGif.setFrame(0);
+      }
+      gifPlayable = true;
       // this is where an explosion thingy would make sense
       if (notTheBall === playerOneTank.body.id) {
         playerOneTank.livesRemaining --;
@@ -201,6 +211,15 @@ function playerWins() {
 // ----------------------------------------------------------------------------------------------
 // Called by another function
 // ----------------------------------------------------------------------------------------------
+
+function playTheGif(x, y){
+  if(explosionGif.getCurrentFrame() !== explosionGif.numFrames() -1){
+    image(explosionGif, x, y, 200, 240);
+  }
+  else{
+    gifPlayable = false;
+  }
+}
 
 // removes the bullet from the world and swithces the players turn by moving the arrow and powerScale to the other tank
 function nextPlayersTurn() {
@@ -310,7 +329,7 @@ class Bullet {
   constructor(x, y, angle, power) {
     this.x = x;
     this.y = y - TANKHEIGHT / 2;
-    this.r = 10;
+    this.r = 15;
 
     this.inclinationAngle = angle;
     this.power = power / 5;
@@ -329,16 +348,19 @@ class Bullet {
   show() {
     this.update();
 
-    push();
-
-    translate(this.x, this.y);
-    rotate(this.rotationAngle);
-    tint(255);
-    noStroke();
-
-    image(bulletImg, 0, 0, this.r*2, this.r*2);
-    noTint();
-    pop();
+    if(!gifPlayable){
+      push();
+  
+      translate(this.x, this.y);
+      rotate(this.rotationAngle);
+      tint(255);
+      noStroke();
+  
+      image(bulletImg, 0, 0, this.r*2, this.r*2);
+      noTint();
+      pop();
+    }
+    
   }
 
   // stops the bullet if its velocity is low, otherwise updates the x, y, and rotationAngle to match the physics body
