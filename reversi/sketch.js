@@ -91,8 +91,8 @@ function setup(){
   textAlign(CENTER);
   text("Reversi", width/2, height/2 - 150);
 
-  textSize(40);
-  text("Enter A Room", width/2, height/2);
+  textSize(25);
+  text("Press Enter To Join A Room", width/2, height/2);
 
   //creates html elements to select the mode
   userInput = createInput('main');

@@ -82,6 +82,8 @@ function setup(){
   textFont(poppins);
   fill(255);
   text("Join Room", width/2, height/2 - 100);
+  textSize(15);
+  text("Press Enter To Start", width/2, height/2 - 75);
   Events.on(engine, "collisionStart", penguinsCollided);
 }
 
@@ -217,9 +219,10 @@ function displayScore(){
   //displays the title and objective
   textSize(70);
   textAlign(CENTER);
+  textSize(40);
   text("Knockout", width/2, 100);
   textSize(15);
-  text("Drown your opponents!", width/2, 130);
+  text("Drown your opponents!", width/2, 125);
 
   //displays the score for each player
   textSize(40);

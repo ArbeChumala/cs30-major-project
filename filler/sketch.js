@@ -86,7 +86,7 @@ function setup(){
   text("Filler", width/2, height/2 - 150);
 
   //instructions to join room
-  textSize(40);
+  textSize(25);
   text("Press Enter to Join A Room", width/2, height/2);
   imageMode(CENTER);
 
