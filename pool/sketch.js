@@ -864,7 +864,7 @@ class WinDisplayer{
     rectMode(CENTER);
     rect(this.x, this.y, this.w, this.h, 10, 10, 10, 10);
     
-    textAlign(CENTER);
+    textAlign(CENTER, CENTER);
     fill(255);
     textSize(50);
     //displays which player wins
