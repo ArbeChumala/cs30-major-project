@@ -348,6 +348,7 @@ function ballOut(){
   }
 }
 
+// called when the eight ball is sunk, determines the winner based on whether the peson who sunk the eight ball had also sunk their other balls
 function determineWinner(){
   if(stripedPlayerPlaying && stripedPlayerBalls === 0 || !stripedPlayerPlaying && nonStripedPlayerBalls !== 0){
     winDisplayer = new WinDisplayer("STRIPES");
@@ -393,6 +394,7 @@ function createBalls(){
   cue = new Cue(width / 3, height / 2);
 }
 
+// finds the column for the balls to be sorted into (used to set initial ball positions)
 function findColumn(n){
   for(let column  = 4; column>=0; column--){
     let lastOfRow = column*(column+1)/2;
@@ -517,7 +519,7 @@ class Ball{
 
     this.id = id;
 
-    // comment this shit broski
+    // set perameters, including image x and y and id's for the different balls, then push bodies to matter.js composite
     this.imageX = this.id%8*15;
     this.imageY = Math.floor(this.id/8)*15;
     this.imageW = 15;
@@ -631,6 +633,7 @@ class Cue{
     this.distanceX = 100;
     this.distanceY = 0;
 
+    // initialized elements used elsewhere
     this.ratio;
     this.distance;
     this.strikeDistance;
@@ -716,7 +719,7 @@ class Cue{
     }
   }
 
-  // shows the cue as a simple black line
+  // shows the cue as a simple brown line
   show(){
     stroke(82, 46, 51);
     strokeWeight(4);
@@ -777,6 +780,7 @@ class Hole{
     Composite.add(world, this.body);
   }
 
+  // shows the hole
   show(){
     push();
     noStroke();
