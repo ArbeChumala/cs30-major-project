@@ -1,13 +1,3 @@
-// 2D Arrays Assignment - Reversi
-// Arbe Chumala
-// April 10, 2025
-//
-// Extra for Experts:
-// - made a (challenging, sigh) reversi bot to play against
-// - changed the appearance of the cursor based on mouseX and mouseY
-// - manually animated the flipping of the tiles (so tedious)
-// - uploaded a custom font
-
 //grid and tile constants
 const EMPTY = 0;
 const WHITE = 1;
@@ -92,9 +82,9 @@ function preload(){
 function setup(){
   noLoop();
   setupCanvas();
-  
-  background("#43AA8B");
 
+  //displays the start screen
+  background("#43AA8B");
   textSize(100);
   textFont(poppins);
   fill(255);
@@ -103,6 +93,7 @@ function setup(){
   textSize(40);
   text("Enter A Room", width/2, height/2);
 
+  //creates html elements to select the mode
   userInput = createInput('main');
   userInput.position(width/2, height/2+25);
   userInput.center("horizontal");
@@ -125,6 +116,7 @@ function windowResized(){
 }
 
 function draw(){
+  //only draws if in a room or the game mode has been chosen
   if(myRoom || mode){
     background("#43AA8B");
     startBotTimer();
@@ -137,6 +129,8 @@ function draw(){
 
 function keyPressed(){
   if(myRoom || mode){
+    //resets the game
+
     if (key === "r"){
       if(myRoom){
         partyEmit("resetGame");
@@ -147,6 +141,8 @@ function keyPressed(){
     }
   }
   else{
+    //starts the party if enter has been pressed
+
     if(key === "Enter"){
       startParty();
     }

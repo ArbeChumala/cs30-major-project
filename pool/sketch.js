@@ -1,10 +1,3 @@
-// Project Title
-// Your Name
-// Date
-//
-// Extra for Experts:
-// - describe what you did to take this project "above and beyond"
-
 // initialize matter js elements
 const{Engine, Events, Render, Runner, Vector, Body, Bodies, Composite} = Matter;
 
@@ -445,8 +438,9 @@ function createBoundaries(){
   playerHasWon = false;
 }
 
-// arbe should comment this
 function findTrapezoidMeasurements(xSign, ySign){
+  //uses various arrays to create an array of vertex measurements
+
   let orientations = [horizontalTrapezoidMeasurments, verticalTrapezoidMeasurements];
   let newMeasurementsArray = [];
 
@@ -455,7 +449,8 @@ function findTrapezoidMeasurements(xSign, ySign){
     y = height/2 + ySign*orientation.centre.y;
 
     let vertexArray = [];
-  
+
+    //uses each object to load vertices
     for (let vertexPair of orientation.vertices){
       let adjustedX = width/2 + xSign*vertexPair.x;
       let adjustedY = height/2 + ySign*vertexPair.y;
@@ -480,13 +475,15 @@ function findTrapezoidMeasurements(xSign, ySign){
   return newMeasurementsArray;
 }
 
-// arbe should comment this
 function createHoles(){
+  //creates physics bodies for each hole that a ball could fall into
+
   holes = [];
 
   let verticalSpots = 3;
   let horizontalSpots = 2;
 
+  //arranges them in a grid based on constants for position
   for(let ix = 0; ix<verticalSpots; ix++){
     for(let iy = 0.5; iy<horizontalSpots; iy++){
 
@@ -499,18 +496,11 @@ function createHoles(){
   }
 }
 
-// arbe should comment this
 function createScoreDisplayers(){
+  //create score displayer for each player
   let stripedScoreDisplayer = new ScoreDisplayer(width/2-poolTableHalfWidth*1.2, height/2, "striped");
   let solidScoreDisplayer = new ScoreDisplayer(width/2+poolTableHalfWidth*1.2, height/2, "solid");
   scoreDisplayers = [stripedScoreDisplayer, solidScoreDisplayer];
-}
-
-// arbe should comment this
-function mousePressed(){
-  let x = Math.abs(width/2-mouseX);
-  let y = Math.abs(height/2-mouseY);
-  console.log([x, y]);
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -597,13 +587,13 @@ class Ball{
     }
   }
 
-  // arbeeeeeeee
+  //sets the velocity based on the position of the cue relative to the ball
   changeVelocity(distanceX, distanceY){
     this.velocity = Vector.create(distanceX, distanceY);
     Body.setVelocity(this.body, this.velocity);
   }
 
-  // arbeeeeeeee
+  //draws a shadow by drawing a tinted image of the ball under and to the side of each ball
   drawShadow(){
     smooth();
     tint(10, 50);
@@ -735,12 +725,12 @@ class Cue{
 
 }
 
-// arbeeeeeeee
 class TrapezoidWall{
   constructor(x, y, vertices){
     this.x = x;
     this.y = y;
 
+    //uses the vertices in an array that is initialized earlier
     this.vertices = vertices;
     
     this.options ={
@@ -748,12 +738,14 @@ class TrapezoidWall{
       restitution: 1,
     };
 
+    //creates a trapezoidal body that matches the pool table image
     this.body = Bodies.fromVertices(this.x, this.y, this.vertices, this.options);
     this.body.label = "wall";
     Composite.add(world, this.body);
   }
 
   show(){
+    //displays it for debugging purposes (currently set to transparent)
     push();
     noStroke();
     fill(255, 255, 255, 0);
@@ -767,7 +759,6 @@ class TrapezoidWall{
   }
 }
 
-// arbeeeeeeeee
 class Hole{
   constructor(x, y){
     this.x = x;
@@ -779,6 +770,7 @@ class Hole{
       isStatic: true,
     };
 
+    //creates a physics body that will detect collisions to sink the ball
     this.body = Bodies.circle(this.x, this.y, this.r, this.options);
     this.body.label = "hole";
 
@@ -794,7 +786,6 @@ class Hole{
   }
 }
 
-// arbeeeeeee
 class ScoreDisplayer{
   constructor(x, y, team){
     this.x = x;
@@ -802,9 +793,13 @@ class ScoreDisplayer{
     this.r = scoreBallRadius;
     this.team = team;
     this.imageX = 30;
+
+    //determines which row in the spritesheet that the image comes from
     this.imageY = this.team === "striped" ? 15: 0;
   }
+
   update(){
+    //updates the amount of balls left (for display purposes)
     this.ballsLeft = this.team === "striped" ? stripedPlayerBalls : nonStripedPlayerBalls;
     if(this.team === "striped" === stripedPlayerPlaying && this.r < scoreBallRadius*1.5){
       this.r ++;
@@ -813,12 +808,18 @@ class ScoreDisplayer{
       this.r--;
     }
   }
+
   show(){
+    //displays a ball and a shadow for the ball being shown
+
     imageMode(CENTER);
     tint(10, 50);
     image(ballGridImage, this.x - shadowOffset, this.y + shadowOffset, this.r * 2, this.r * 2, this.imageX, this.imageY, 15, 15);
+    
     noTint();
     image(ballGridImage, this.x, this.y, this.r * 2, this.r * 2, this.imageX, this.imageY, 15, 15);
+    
+    //displays the balls left
     textAlign(CENTER);
     textFont(poppins);
     textSize(30);
@@ -839,23 +840,30 @@ class WinDisplayer{
     this.colour = color(33, 58, 42);
   }
   update(){
+    //raises the y value until it is at height over 2
     if(this.y > height/2){
       this.y*=0.98;
     }
+
+    //raises the opacity of the dimming background
     if(this.a < 100){
       this.a*=1.3;
     }
   }
   show(){
+    //changes the background colour
     noStroke();
     background(10, 10, 10, this.a);
+
+    //creates a coloured rectangle around the text
     fill(this.colour);
     rectMode(CENTER);
     rect(this.x, this.y, this.w, this.h, 10, 10, 10, 10);
+    
     textAlign(CENTER);
     fill(255);
     textSize(50);
-
+    //displays which player wins
     text(this.winningPlayer + " WINS!", this.x, this.y-10);
   }
 }
