@@ -5,6 +5,7 @@
 // Extra for Experts:
 // - describe what you did to take this project "above and beyond"
 
+// set constants
 const PADWIDTH = 1200;
 const TANKWIDTH = 150;
 const TANKHEIGHT = 50;
@@ -13,6 +14,7 @@ const PIXEL_RATIO = 60/19;
 
 let towerHeight;
 
+// initialize elements for game state settings, important elements, and measurements that will be set in setup
 let gameOver = false;
 let flyingBullet;
 let bulletExists = false;
@@ -214,7 +216,8 @@ function collisionStarted(event) {
   }
 }
 
-// arbeeeeeeeeeeeeeeeeeee this is the win screen thingggggggggggggggggggggggggggggggggggggggggg
+
+// checks whether a player has won and clears the game and displays win screen if they have
 function playerWins() {
   if (playerOneTank.livesRemaining === 0) {
     gameOver = true;
@@ -232,6 +235,7 @@ function playerWins() {
 // Called by another function
 // ----------------------------------------------------------------------------------------------
 
+// plays the explosion when bullet collides with something
 function playTheGif(x, y){
   if(explosionGif.getCurrentFrame() !== explosionGif.numFrames() -1){
     image(explosionGif, x, y, 200, 240);
@@ -662,6 +666,8 @@ class WinDisplayer{
     this.a = 1;
     this.colour ="#212d3a";
   }
+
+  // ensures sizing fits the screen
   update(){
     if(this.y > height/2){
       this.y*=0.95;
@@ -670,10 +676,12 @@ class WinDisplayer{
       this.a*=1.3;
     }
   }
+
+  // shows a winScreen with text showing which player won
   show(){
     background(10, 10, 10, this.a);
     fill(this.colour);
-    rectMode(CENTER);
+    rectMode(CENTER, CENTER);
     rect(this.x, this.y, this.w, this.h, 10, 10, 10, 10);
     textAlign(CENTER);
     fill(255);
