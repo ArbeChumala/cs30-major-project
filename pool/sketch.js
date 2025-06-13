@@ -670,7 +670,7 @@ class Cue{
     }
 
     // follows the mouse if pressed and if the mouse is within 100 pixels along x and y of the tip of the cue
-    else if (mouseIsPressed && mouseX < this.x + MOUSE_FORGIVENESS && mouseX > this.x - MOUSE_FORGIVENESS && mouseY > this.y - MOUSE_FORGIVENESS && mouseY < this.y + MOUSE_FORGIVENESS && this.distance >= MOUSE_FORGIVENESS){
+    else if (mouseIsPressed && mouseX < this.x + MOUSE_FORGIVENESS && mouseX > this.x - MOUSE_FORGIVENESS && mouseY > this.y - MOUSE_FORGIVENESS && mouseY < this.y + MOUSE_FORGIVENESS && this.distance >= MOUSE_FORGIVENESS && this.distance < 300){
       this.ratio = 100 /this.distance;
       this.strikeRatio = 100 / this.strikeDistance;
       
