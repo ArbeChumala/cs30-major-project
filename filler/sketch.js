@@ -4,6 +4,8 @@ let botModeButton;
 let sameScreenButton;
 
 let mode;
+let winDisplayer;
+let gameOver = false;
 
 let poppins;
 let frameImg;
@@ -54,7 +56,7 @@ function preload(){
   frameImg = loadImage("assets/images/frame.png");
   frameShadowImg = loadImage("assets/images/outer-shadow.png");
   squareShadowImg = loadImage("assets/images/square-shadow.png");
-  mouseClick = loadSound("assets/sounds/button-click.m4a");
+  mouseClick = loadSound("assets/sounds/button-sound.m4a");
 }
 
 function setupCanvas(){
@@ -105,6 +107,13 @@ function draw(){
     displayFrame();
     displayButtons();
     displayScore();
+
+    if(!gameOver){
+      determineWinner();
+    }
+    else{
+      displayWinScreen();
+    }
   }
 }
 
@@ -124,6 +133,29 @@ function mousePressed(){
 //-----------------------------------------------------------------------------------------------
 //functions that are solely triggered by other functions
 //-----------------------------------------------------------------------------------------------
+
+function determineWinner(){
+  let playerOneScore = scoreDisplayers[0].score;
+  let playerTwoScore = scoreDisplayers[1].score;
+
+  if(playerOneScore + playerTwoScore === GAME_WIDTH*GAME_HEIGHT){
+    if(playerOneScore>playerTwoScore){
+      winDisplayer = new WinDisplayer(PLAYER_ONE);
+    }
+    else if(playerTwoScore > playerOneScore){
+      winDisplayer = new WinDisplayer(PLAYER_TWO);
+    }
+    else if(playerTwoScore === playerOneScore){
+      winDisplayer = new WinDisplayer("TIE");
+    }
+    gameOver = true;
+  }
+}
+
+function displayWinScreen(){
+  winDisplayer.update();
+  winDisplayer.show();
+}
 
 function startBotMode(){
   mode = "pvb";
@@ -386,6 +418,7 @@ function displayButtons(){
 function displayScore(){
   fill(255);
   textSize(100);
+  textAlign(CENTER);
   text("Filler", width/2, height/2 - 5*squareDimensions);
   textSize(15);
   text("Absorb all the colour!", width/2, height/2-4.5*squareDimensions);
@@ -543,6 +576,73 @@ class ScoreDisplayer{
       }
   
       this.score = score;
+    }
+  }
+}
+
+class WinDisplayer{
+  constructor(winningPlayer){
+    this.winningPlayer = winningPlayer;
+    this.x = width/2;
+    this.y = height;
+    this.w = 500;
+    this.h = 100;
+    this.a = 1;
+    this.colour = color(64, 42, 51);
+  }
+  update(){
+    if(this.y > height/2){
+      this.y*=0.98;
+    }
+    if(this.a < 100){
+      this.a*=1.3;
+    }
+  }
+  show(){
+    noStroke();
+    background(10, 10, 10, this.a);
+    fill(this.colour);
+    rectMode(CENTER);
+    rect(this.x, this.y, this.w, this.h, 10, 10, 10, 10);
+    textAlign(CENTER);
+    fill(255);
+    textSize(50);
+
+    if(this.winningPlayer === PLAYER_ONE){
+      if(mode){
+        if(mode === "pvp"){
+          text("PLAYER ONE WINS", this.x, this.y-10);
+        }
+        else if(mode === "pvb"){
+          text("YOU WIN", this.x, this.y-10);
+        }
+      }
+      if(myRoom){
+        if(yourPlayer === PLAYER_ONE){
+          text("YOU WIN");
+        }
+        else{
+          text("YOU LOST");
+        }
+      }
+    }
+    else if(this.winningPlayer === PLAYER_TWO){
+      if(mode){
+        if(mode === "pvp"){
+          text("PLAYER TWO WINS", this.x, this.y-10);
+        }
+        else if(mode === "pvb"){
+          text("BOT WINS", this.x, this.y-10);
+        }
+      }
+      if(myRoom){
+        if(yourPlayer === PLAYER_TWO){
+          text("YOU WIN");
+        }
+        else{
+          text("YOU LOST");
+        }
+      }   
     }
   }
 }
