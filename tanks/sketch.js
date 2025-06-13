@@ -6,11 +6,12 @@
 // - describe what you did to take this project "above and beyond"
 
 const PADWIDTH = 1200;
-const TOWERHEIGHT = 600;
 const TANKWIDTH = 150;
 const TANKHEIGHT = 50;
 const TILE_SIZE = 60;
 const PIXEL_RATIO = 60/19;
+
+let towerHeight;
 
 let gameOver = false;
 let flyingBullet;
@@ -93,10 +94,11 @@ function setup() {
   playerOneSideHeightFactor = random(50, 150);
   playerTwoSideHeightFactor = random(50, 150);
   currentSideHeightFactor = playerOneSideHeightFactor;
+  towerHeight = 3 * height / 4;
 
   let playerOneGround = new CollisionZone(width / 2 - PADWIDTH, height / 2 + playerOneSideHeightFactor, PADWIDTH, height / 2 - playerOneSideHeightFactor, "playerOne");
   let playerTwoGround = new CollisionZone(width / 2, height / 2 + playerTwoSideHeightFactor, PADWIDTH, height / 2 - playerTwoSideHeightFactor, "playerTwo");
-  tower = new CollisionZone(width / 2 - PADWIDTH / 8, height - TOWERHEIGHT, PADWIDTH / 8, TOWERHEIGHT, "tower");
+  tower = new CollisionZone(width / 2 - PADWIDTH / 8, height - towerHeight, PADWIDTH / 8, towerHeight, "tower");
 
   walls.push(tower);
   walls.push(playerOneGround);
