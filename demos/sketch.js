@@ -6,7 +6,7 @@
 // - describe what you did to take this project "above and beyond"
 
 // module aliases
-// 
+
 const {Engine, Render, Runner, Bodies, Composite} = Matter;
 const FAR_TRAPEZOID_X = 460;
 const MIDDLE_TRAPEZOID_X = 410;
