@@ -140,7 +140,7 @@ h2 a:hover, li a:hover{
 }
 
 .movieinfo{
-    width: 300px;
+    width: 400px;
     font-style: normal;
 }
 
@@ -193,10 +193,12 @@ h2 a:hover, li a:hover{
     padding-top: 300px;
 }
 
+
 .dynamiclayout, .staticlayout, .movieblock{
     background-color: #cdcdc8;
     border-radius: 20px;
     margin-top: 20px;
+    margin-bottom: 20px;
     margin-left: 150px;
     margin-right: 150px;
     padding: 40px;
