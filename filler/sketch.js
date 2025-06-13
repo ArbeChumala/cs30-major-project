@@ -599,6 +599,7 @@ class ScoreDisplayer{
   show(){
     //displays a square based on the current colour of the player
     fill(colourArray[this.colour]);
+    textAlign(CENTER);
     stroke("#5c5550");
     strokeWeight(4);
     rectMode(CENTER);
@@ -699,9 +700,9 @@ class WinDisplayer{
     noStroke();
     background(10, 10, 10, this.a);
     fill(this.colour);
-    rectMode(CENTER, CENTER);
+    rectMode(CENTER);
     rect(this.x, this.y, this.w, this.h, 10, 10, 10, 10);
-    textAlign(CENTER);
+    textAlign(CENTER, CENTER);
     fill(255);
     textSize(50);
 

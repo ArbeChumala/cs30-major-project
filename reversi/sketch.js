@@ -88,6 +88,7 @@ function setup(){
   textSize(100);
   textFont(poppins);
   fill(255);
+  textAlign(CENTER);
   text("Reversi", width/2, height/2 - 150);
 
   textSize(40);
@@ -556,6 +557,7 @@ function displayGrid(){
 
 function displayScore(){
   //displays the title and objective
+  textAlign(CENTER);
   textSize(70);
   text("Reversi", width/2, 65);
   textSize(15);
@@ -586,13 +588,6 @@ function displayWinScreen(){
   if(gameOver){
     winDisplayer.update();
     winDisplayer.show();
-    // let x = noise(noiseTimer, 0)*width;
-    // let y = noise(0, noiseTimer)*height;
-  
-    // noiseTimer += DELTA_NOISE_TIMER;
-
-    // textSize(70);
-    // text(`CONGRATULATIONS, ${theWinner} WON!`, x, y);
   }
 }
 
@@ -635,9 +630,9 @@ class WinDisplayer{
     noStroke();
     background(10, 10, 10, this.a);
     fill(this.colour);
-    rectMode(CENTER, CENTER);
+    rectMode(CENTER);
     rect(this.x, this.y, this.w, this.h, 10, 10, 10, 10);
-    textAlign(CENTER);
+    textAlign(CENTER, CENTER);
     fill(255);
     textSize(50);
 

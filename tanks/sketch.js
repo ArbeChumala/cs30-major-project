@@ -681,9 +681,9 @@ class WinDisplayer{
   show(){
     background(10, 10, 10, this.a);
     fill(this.colour);
-    rectMode(CENTER, CENTER);
+    rectMode(CENTER);
     rect(this.x, this.y, this.w, this.h, 10, 10, 10, 10);
-    textAlign(CENTER);
+    textAlign(CENTER, CENTER);
     fill(255);
     textSize(50);
 
