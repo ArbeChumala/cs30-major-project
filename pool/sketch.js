@@ -225,7 +225,6 @@ function draw(){
         ballY = ball.body.position.y;
       }
       ball.update();
-      ball.show();
     }
 
     // checks if the cue should be shown and if the balls just stopped moving last frame
@@ -237,6 +236,10 @@ function draw(){
       cue.show();
     }
     cue.update(ballX, ballY);
+
+    for (let ball of balls) {
+      ball.show();
+    }
 
     // shows barriers
     for (let wall of walls){
@@ -710,7 +713,7 @@ class Cue{
 
   // shows the cue as a simple black line
   show(){
-    stroke("black");
+    stroke(82, 46, 51);
     strokeWeight(4);
     line(this.x, this.y, this.strikeX, this.strikeY);
   }
