@@ -105,7 +105,7 @@ function setupCanvas(){
   vFarTrapX = 500*poolTableHalfWidth/500;
   vCloseTrapX = 440*poolTableHalfWidth/500;
   vMiddleTrapY = 160*poolTableHalfWidth/500;
-  vCloseTrapY = 0.5*poolTableHalfWidth/500;
+  vCloseTrapY = 0.5;
   vFarTrapY = 200*poolTableHalfWidth/500;
 
   verticalTrapezoidMeasurements;
