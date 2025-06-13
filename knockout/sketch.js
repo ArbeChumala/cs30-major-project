@@ -216,6 +216,7 @@ function displayScore(){
 
   //displays the title and objective
   textSize(70);
+  textAlign(CENTER);
   text("Knockout", width/2, 100);
   textSize(15);
   text("Drown your opponents!", width/2, 130);
@@ -242,13 +243,14 @@ function displayScore(){
 
   //displays some instructions
   textSize(15);
+  textAlign(CENTER);
   if(!gameOver){
     text("Press P when Ready To Launch!", width/2, height-60);
     text("Press R to Reset", width/2, height-40);
   }
 }
 
-// if one or both players have lost all their penguins, shows the winner (arbeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee update winScreen here)
+// if one or both players have lost all their penguins, shows the winner
 function determineWinner(){
   if(penguinsStationary()){
     if(penguins.length > 0 && bluePenguinCount===0){
@@ -292,7 +294,7 @@ function startParty(){
     setupGame);
 }
 
-// ititializes the game, resetting penguin locations and arrows, disconnecting the room if it is no longer full
+// initializes the game, resetting penguin locations and arrows, disconnecting the room if it is no longer full
 function setupGame(){
   Composite.clear(world);
   penguins = [];
@@ -320,6 +322,7 @@ function setupGame(){
 
   textFont(poppins);
 
+  //checks specifically if 2 people are in the room, if the room is already full, you are disconnected
   if(partyLoadGuestShareds().length <2){
     partyLoadMyShared({name: myId});
   }
@@ -334,17 +337,20 @@ function setupGame(){
   loop();
 }
 
-// arbeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 function playerReady(dataObject){
+  //pushes the player that emitted the message to an array, so one person can't send the message twice
   if(playersReady.length === 0){
     playersReady.push(dataObject.player);
   }
+
+  //makes sure that the array doesn't already have the player
   else if(playersReady.length === 1){
     if(playersReady[0] !== dataObject.player){
       playersReady.push(dataObject.player);
     }
   }
 
+  //once both players are ready, it resets the velocities array and tells the guest to send velocities
   if(playersReady.length === 2){
     if(!partyIsHost()){
       partySetShared(shared, {velocities: [0, 0, 0, 0, 0, 0, 0, 0]});
@@ -354,7 +360,7 @@ function playerReady(dataObject){
   }
 }
 
-// shares the penguin velocities with the non-host player
+// shares the penguin velocities with the non-host player (happens after the guest shares their velocities)
 function hostSendVelocities(){
   if(partyIsHost()){
     for(let penguin of penguins){
@@ -371,22 +377,26 @@ function checkIfReady(){
   if(!partyIsHost()){
     let isReady = true;
 
+    //each element in the shared velocities array should be another array. if one of them isn't that means it's not initialized yet
     for(let penguin of penguins){
       if (shared.velocities[penguin.id].length !== 2){
         isReady = false;
       }
     }
 
+    //the guest sends a message for the players to recieve the velocities if ready
     if(isReady){
       partyEmit("recieveVelocities");
     }
+
+    //otherwise, the host resends their velocities to the shared array
     else{
-      partyEmit("hostSendVelocities");
+      partyEmit("guestSendVelocities");
     }
   }
 }
 
-// arbeeeeeeeeeeeeeee
+// sends each of the velocities based on the penguin's arrows to the shared variables
 function guestSendVelocities(){
   if(!partyIsHost()){
     for(let penguin of penguins){
@@ -397,7 +407,7 @@ function guestSendVelocities(){
   }
 }
 
-// arbeeeeeeeeeee
+// takes the velocity from the shared variable and sends it back to the penguin
 function recieveVelocities(){
   for(let penguin of penguins){
     penguin.recieveVelocity();
@@ -427,11 +437,13 @@ class Penguin{
     this.team = team;
     this.id = id;
     
+    //creates an arrow if the player is supposed to control the penguin
     if(this.team === hostStatus){
       this.arrow = new Arrow(this.x, this.y, this.id);
       arrows.push(this.arrow);
     }
 
+    //changes the image based on the penguin's team
     if(this.team === "host"){
       this.image = bluePenguinImg;
     }
@@ -449,18 +461,24 @@ class Penguin{
 
   show(){
     this.update();
+
+    //shows arrow if they have it
     if(this.arrow){
       this.arrow.show();
     }
 
+    //draws the shadow under the penguin
     image(penguinShadowImg, this.x - SHADOW_OFFSET*0.5, this.y + SHADOW_OFFSET, this.r * 2 * 1.5, this.r * 2 * 1.5);
 
     push();
-    
+
+    //moves the canvas to rotate the penguin
     translate(this.x, this.y);
     rotate(this.angle);
 
     noSmooth();
+
+    //draws the penguin
     image(this.image, 0, 0, this.r*2, this.r*2);
 
     pop();
@@ -471,14 +489,17 @@ class Penguin{
     this.y = this.body.position.y;
     this.angle = this.body.angle;
 
+    //only updates the arrow if it has one
     if(this.team === hostStatus){
       this.arrow.update(this.x, this.y);
     }
 
+    //shrinks the penguin if it is falling
     if (this.isDying()){
       this.r *= 0.9;
     }
 
+    //stops the penguins if they are all almost done moving
     if(penguinsStationary()){
       let stationary = Vector.create(0,0);
       Body.setVelocity(this.body, stationary);
@@ -486,6 +507,7 @@ class Penguin{
   }
 
   sendVelocity(){
+    //updates the shared velocities and corresponds the velocity index with the penguin's id
     if(this.team === hostStatus){
       let dx = (this.arrow.x - this.arrow.penguinX)*0.05;
       let dy = (this.arrow.y - this.arrow.penguinY)*0.05;
@@ -495,15 +517,18 @@ class Penguin{
   }
 
   recieveVelocity(){
+    //takes the velocity from the shared variable and sets it on the body
     let velocity = Vector.create(shared.velocities[this.id][0],shared.velocities[this.id][1]);
     Body.setVelocity(this.body, velocity);
   }
 
   isDying(){
+    //returns true if the penguin is falling off of the ice floe
     return !(Math.abs(this.x - width/2) < squareWidth/2+this.r*0.7 && Math.abs(this.y - height/2) < squareWidth/2+this.r*0.7);
   }
 
   isDead(){
+    //returns true if the penguin has been falling for a while (radius has shrunk significantly)
     return this.r < 3;
   }
 }
@@ -519,6 +544,7 @@ class Arrow{
     this.activity = false;
     this.invisible = false;
 
+    //changes the arrow image based on if the player is host or guest (matches the penguin that the player controld)
     if(!partyIsHost()){
       this.colour = color(48, 49, 59);
       this.arrowImg = blackArrowHeadImg;
@@ -532,9 +558,9 @@ class Arrow{
   }
 
   show(){
-    //the penguins have been stationary
     if(penguinsStationary() && this.stationaryLastFrame && !this.invisible){
-      //draw the line
+      //the penguins have been stationary, so it draws the arrow
+
       stroke(this.colour);
       strokeCap(SQUARE);
       strokeWeight(8);
@@ -550,16 +576,19 @@ class Arrow{
       pop();
     }
 
-    //the penguins are just stopping
     else if (penguinsStationary() && !this.stationaryLastFrame){
+      //the penguins are just stopping, so it changes the invisible variable
+
       this.stationaryLastFrame = true;
       this.invisible = false;
+
+      //chooses a new x and the y
       this.x = this.chooseX();
       this.y = this.chooseY();
     }
 
-    //the penguins are moving
     else if(!penguinsStationary()){
+      //doesn't show if it is moving
       this.stationaryLastFrame = false;
     }
   }
@@ -568,11 +597,14 @@ class Arrow{
     this.penguinX = x;
     this.penguinY = y;
     
+    //calculates the distance of the arrow in x and y
     let dy = -(this.y - this.penguinY);
     let dx = this.x - this.penguinX;
 
+    //changes the starting angle of the arrow
     let startingAngle = atan(dy/dx);
 
+    //rotates it based on whether or not the arrow is pointing forward or backward - so that the arrow is pointing up
     if(dx > 0){
       this.angle = startingAngle - PI/2;
     }
@@ -605,10 +637,13 @@ class Arrow{
   }
 
   isActive(){
-    return Math.abs(mouseX - this.x) <= 5 && Math.abs(mouseY - this.y) <= 5 ;
+    //returns true if the mouse is inside of the arrow head
+    return Math.abs(mouseX - this.x) <= 10 && Math.abs(mouseY - this.y) <= 10 ;
   }
 
   chooseNewCoordinate(reference){
+    //finds a random coordinate within a certain range of the penguin for the arrow tip to be
+
     let variable;
 
     if(random(100) > 50){
@@ -639,6 +674,7 @@ class WinDisplayer{
     this.a = 1;
     this.colour = color(46, 87, 104);
   }
+
   update(){
     if(this.y > height/2){
       this.y*=0.98;
@@ -647,16 +683,23 @@ class WinDisplayer{
       this.a*=1.3;
     }
   }
+
   show(){
+    //darkens the background
     noStroke();
     background(10, 10, 10, this.a);
+
+    //displays the colour of the rectangle behind the text
     fill(this.colour);
     rectMode(CENTER);
     rect(this.x, this.y, this.w, this.h, 10, 10, 10, 10);
-    textAlign(CENTER);
+
+    //aligns the text
+    textAlign(CENTER, CENTER);
     fill(255);
     textSize(50);
 
+    //displays different messages based on the winning player
     if(this.winningPlayer !== "TIE"){
       text(this.winningPlayer + " WINS!", this.x, this.y-10);
     }
