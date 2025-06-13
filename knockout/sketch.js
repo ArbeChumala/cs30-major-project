@@ -16,7 +16,7 @@ let penguins = [];
 let arrows = [];
 let winDisplayer;
 
-let squareWidth = 450;
+let squareWidth = 300;
 
 let hostStatus;
 let playerCanJoin = true;
@@ -391,7 +391,7 @@ function checkIfReady(){
 
     //otherwise, the host resends their velocities to the shared array
     else{
-      partyEmit("guestSendVelocities");
+      partyEmit("hostSendVelocities");
     }
   }
 }
