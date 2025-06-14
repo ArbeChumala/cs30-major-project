@@ -1,3 +1,12 @@
+// Final Project - Knockout Game
+// Samuel Wardell & Arbe Chumala
+// June 13th, 2025
+//
+// Description of coding application / Challenges
+// - Using p5party, including rooms, to share across different tabs or devices
+// - Using matter.js physics to manage collisions
+// - sound etc for increased playability
+
 // module aliases
 const {Engine, Events, Render, Runner, Vector, Body, Bodies, Composite} = Matter;
 

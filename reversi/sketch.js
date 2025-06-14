@@ -1,3 +1,11 @@
+// Final Project - Reversi Game
+// Samuel Wardell & Arbe Chumala
+// June 13th, 2025
+//
+// Description of coding application / Challenges
+// - Using p5party, including rooms, to share across different tabs or devices
+// - Creation of bot to play against player
+
 //grid and tile constants
 const EMPTY = 0;
 const WHITE = 1;

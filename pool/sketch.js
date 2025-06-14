@@ -1,3 +1,12 @@
+// Final Project - Pool Game
+// Samuel Wardell & Arbe Chumala
+// June 13th, 2025
+//
+// Description of coding application / Challenges
+// - Using matter.js physics to manage collisions
+// - sound etc for increased playability
+// - Especially using more complex collision shapes to allow for better gameplay
+
 // initialize matter js elements
 const{Engine, Events, Render, Runner, Vector, Body, Bodies, Composite} = Matter;
 

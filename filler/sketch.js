@@ -1,3 +1,13 @@
+// Final Project - Filler Game
+// Samuel Wardell & Arbe Chumala
+// June 13th, 2025
+//
+// Description of coding application / Challenges
+// - Used recursion to go through potential captures and display
+// - Creation of bot to play against player
+
+
+
 let myRoom = undefined;
 let userInput;
 let botModeButton;

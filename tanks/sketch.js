@@ -1,9 +1,11 @@
-// Tanks
+// Final Project - Tanks Game
 // Samuel Wardell & Arbe Chumala
-// June 13, 2025
+// June 13th, 2025
 //
-// Extra for Experts:
-// - describe what you did to take this project "above and beyond"
+// Description of coding application / Challenges
+// - Using matter.js physics to manage collisions
+// - sound etc for increased playability
+// - managing angles for turret, as well as using a GIF
 
 // set constants
 const PADWIDTH = 1200;
